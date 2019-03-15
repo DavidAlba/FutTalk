@@ -25,34 +25,13 @@ namespace Catalog.API.Tests
             Assert.Equal(expected: typeof(FutTalkException), actual: ex.GetType());
         }
 
-        [Fact]
-        public void GetAllMessages()
+        [Theory]
+        [ClassData(typeof(MessageTestData))]
+        public void GetAllMessages(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupGet(m => m.Messages).Returns
-                (
-                    new Message[] {
-                        new Message
-                        {
-                            Id = 1,
-                            Name = "Msg1 Name",
-                            Body = "Msg1 Body"
-                        },
-                        new Message
-                        {
-                            Id = 2,
-                            Name = "Msg2 Name",
-                            Body = "Msg2 Body"
-                        },
-                        new Message
-                        {
-                            Id = 3,
-                            Name = "Msg3 Name",
-                            Body = "Msg3 Body"
-                        }
-                    }
-                );
+            mock.SetupGet(m => m.Messages).Returns(messages);
             CatalogController controller = new CatalogController(mock.Object);
 
             // Act
