@@ -8,8 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catalog.API.Controllers
-{
-    [Produces("application/json")]
+{    
     [Route("api/[controller]")]
     public class CatalogController : Controller
     {
