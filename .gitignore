@@ -261,3 +261,4 @@ __pycache__/
 *.pyc
 /Catalog.API/Infrastructure/EntityConfigurations/MessageEntityTypeConfiguration.cs
 /Catalog.API/Infrastructure/DatabaseContexts/MessagingContext.cs
+/Catalog.API.Migrations

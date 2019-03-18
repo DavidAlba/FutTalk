@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catalog.API", "Catalog.API\Catalog.API.csproj", "{02C50B22-6D39-4CA2-8D37-71265B3ADD46}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Catalog.API", "Catalog.API\Catalog.API.csproj", "{02C50B22-6D39-4CA2-8D37-71265B3ADD46}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catalog.API.Tests", "Catalog.API.Tests\Catalog.API.Tests.csproj", "{95EEFF98-E38C-47B5-845C-FB8ABF17E705}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Catalog.API.Tests", "Catalog.API.Tests\Catalog.API.Tests.csproj", "{95EEFF98-E38C-47B5-845C-FB8ABF17E705}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
