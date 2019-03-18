@@ -19,5 +19,35 @@ namespace Catalog.API.Models
 
         public IEnumerable<Message> Messages { get; set; }
 
+        public Message GetMessage(int id) => Messages.SingleOrDefault<Message>((m) => m.Id == id);
+
+        public Message AddMessage(Message message)
+        {
+            Messages.ToList<Message>().Add(message);
+            return GetMessage(message.Id);
+        }
+
+        public Message ReplaceMessage(Message message)
+        {
+            DeleteMessage(message.Id);
+            return AddMessage(message);
+        }
+
+        public Message UpdateMessage(Message message)
+        {
+            Message msg = GetMessage(message.Id);
+            if (msg != null)
+            {
+                msg.Name = message.Name;
+                msg.Body = message.Body;
+            };
+
+            return msg;
+        }
+
+        public void DeleteMessage(int id)
+        {
+            Messages.ToList<Message>().Remove(GetMessage(id));
+        }
     }
 }

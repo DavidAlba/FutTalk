@@ -19,7 +19,12 @@ namespace Catalog.API.Tests
         private IEnumerable<object> GetMessages()
         {            
             for (int i = 0; i < 5; i++)
-                yield return new Message { Id = 1, Name = $"Name {i + 1}" };
+                yield return 
+                    new Message {
+                        Id = i + 1,
+                        Name = $"Name {i + 1}",
+                        Body = $"Boday {i + 1}"
+                    };
         }
     }
 }
