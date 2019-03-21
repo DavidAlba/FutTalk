@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Catalog.API.Migrations
+namespace Catalog.API.Infrastructure.Migrations.SqlServerMigrations
 {
-    [DbContext(typeof(MessagingContext))]
-    partial class MessagingContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(SqlServerMessagingContext))]
+    partial class SqlServerMessagingContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -26,11 +26,13 @@ namespace Catalog.API.Migrations
 
                     b.Property<string>("Body");
 
-                    b.Property<string>("Name");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50);
 
                     b.HasKey("Id");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Message");
                 });
 #pragma warning restore 612, 618
         }

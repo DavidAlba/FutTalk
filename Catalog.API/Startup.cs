@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
+using Catalog.API.Infrastructure.DatabaseContexts;
 
 namespace Catalog.API
 {
@@ -18,7 +19,8 @@ namespace Catalog.API
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IRepository, MemoryRepository>();
+            services.AddDbContext<SqliteMessagingContext>();
+            services.AddSingleton<IRepository, MessagingInMemoryRepository>();
             services.AddMvc();
                //.AddXmlDataContractSerializerFormatters()
                //.AddMvcOptions(opts => {

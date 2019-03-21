@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Catalog.API.Tests
 {
-    public class CatalogTests
+    public class MessageControllerTests
     {
         [Fact]
         public void GetAllMessagesThrowsException()
@@ -25,7 +25,7 @@ namespace Catalog.API.Tests
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert            
-            Exception ex = Assert.Throws<FutTalkException>(() => controller.GetMessages());
+            Exception ex = Assert.Throws<FutTalkException>(() => controller.GetAllMessages());
             Assert.Equal(expected: typeof(FutTalkException), actual: ex.GetType());
         }
 
@@ -38,14 +38,14 @@ namespace Catalog.API.Tests
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            NoContentResult model = controller.GetMessages() as NoContentResult;
+            NoContentResult model = controller.GetAllMessages() as NoContentResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.NoContent, model.StatusCode);
         }
 
         [Theory]
-        [ClassData(typeof(MessageTestData))]
+        [ClassData(typeof(MessagesTestData))]
         public void GetAllMessagesOk(Message[] messages)
         {
             // Arrange
@@ -54,7 +54,7 @@ namespace Catalog.API.Tests
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            OkObjectResult model = controller.GetMessages() as OkObjectResult;
+            OkObjectResult model = controller.GetAllMessages() as OkObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.OK, model.StatusCode);
@@ -66,7 +66,7 @@ namespace Catalog.API.Tests
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessage(It.IsAny<int>())).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
@@ -86,11 +86,11 @@ namespace Catalog.API.Tests
 
             // Assert            
             Assert.Equal(400, model.StatusCode);
-            mock.Verify(rep => rep.GetMessage(It.IsAny<int>()), Times.Never);
+            mock.Verify(rep => rep.GetMessageById(It.IsAny<int>()), Times.Never);
         }
 
         [Theory]
-        [ClassData(typeof(MessageTestData))]
+        [ClassData(typeof(MessagesTestData))]
         public void GetMessageByIdNotFound(Message[] messages)
         {
             // Arrange
@@ -106,13 +106,13 @@ namespace Catalog.API.Tests
         }
 
         [Theory]
-        [ClassData(typeof(MessageTestData))]
+        [ClassData(typeof(MessagesTestData))]
         public void GetMessageByIdOk(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
             var message = messages.SingleOrDefault<Message>((m) => m.Id == 2);
-            mock.SetupSequence(rep => rep.GetMessage(It.IsAny<int>())).Returns(message);
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(message);
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
@@ -128,16 +128,17 @@ namespace Catalog.API.Tests
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.AddMessage(null)).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.AddMessage(It.IsAny<Message>())).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = Assert.Throws<FutTalkException>(() => controller.CreateMessage(null));
+            Exception ex = Assert.Throws<FutTalkException>(() => controller.CreateMessage(new Message() { Id = int.MaxValue }));
             Assert.Equal(expected: typeof(FutTalkException), actual: ex.GetType());
         }
 
         [Theory]
-        [ClassData(typeof(MessageTestData))]
+        [ClassData(typeof(MessagesTestData))]
         public void CreateMessageCreated(Message[] messages)
         {
             // Arrange
@@ -154,14 +155,50 @@ namespace Catalog.API.Tests
             Assert.Equal((int?)HttpStatusCode.Created, model.StatusCode);
         }
 
-        [Theory]
-        [ClassData(typeof(MessageTestData))]
-        public void CreateMessageBadRequest(Message[] messages)
+        [Fact]
+        public void CreateMessageBadRequestMessageIdIsLessThanOne()
         {
             // Arrange
             var mock = new Mock<IRepository>();
             MessageController controller = new MessageController(mock.Object);
-            mock.SetupSequence(rep => rep.GetMessage(It.IsAny<int>())).Returns(messages[0]);           
+            Message message = new Message()
+            {
+                Id = int.MinValue,
+                Name = $"Name {int.MinValue}",
+                Body = $"Body {int.MinValue}"
+            };
+
+            // Act            
+            BadRequestObjectResult model = controller.CreateMessage(message) as BadRequestObjectResult;
+
+            // Assert
+            mock.Verify(m => m.AddMessage(It.IsAny<Message>()), Times.Never);
+            Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
+        }
+
+        [Fact]        
+        public void CreateMessageBadRequestMessageIsNull()
+        {
+            // Arrange
+            var mock = new Mock<IRepository>();
+            MessageController controller = new MessageController(mock.Object);            
+
+            // Act            
+            BadRequestObjectResult model = controller.CreateMessage(null) as BadRequestObjectResult;
+
+            // Assert
+            mock.Verify(m => m.AddMessage(It.IsAny<Message>()), Times.Never);
+            Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
+        }
+
+        [Theory]
+        [ClassData(typeof(MessagesTestData))]
+        public void CreateMessageBadRequestMessageAlreadyExists(Message[] messages)
+        {
+            // Arrange
+            var mock = new Mock<IRepository>();
+            MessageController controller = new MessageController(mock.Object);
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(messages[0]);           
 
             // Act            
             BadRequestObjectResult model = controller.CreateMessage(messages[0]) as BadRequestObjectResult;
@@ -176,17 +213,48 @@ namespace Catalog.API.Tests
         {
             // Arrange
             var mock = new Mock<IRepository>();
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
             mock.SetupSequence(rep => rep.AddMessage(It.IsAny<Message>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = Assert.Throws<FutTalkException>(() => controller.ReplaceMessage(It.IsAny<Message>()));
+            Exception ex = Assert.Throws<FutTalkException>(() => controller.ReplaceMessage(new Message() { Id = int.MaxValue }));
             Assert.Equal(typeof(FutTalkException), ex.GetType());
         }
 
+        [Fact]
+        public void ReplaceMessageIdIsLessThanOne()
+        {
+            // Arrange
+            var mock = new Mock<IRepository>();
+            MessageController controller = new MessageController(mock.Object);
+
+            // Act            
+            BadRequestObjectResult model = controller.ReplaceMessage(new Message() { Id = int.MinValue }) as BadRequestObjectResult;
+
+            // Assert
+            Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
+            mock.Verify(rep => rep.ReplaceMessage(It.IsAny<Message>()), Times.Never);
+        }
+
+        [Fact]
+        public void ReplaceMessageIsNull()
+        {
+            // Arrange
+            var mock = new Mock<IRepository>();
+            MessageController controller = new MessageController(mock.Object);
+
+            // Act            
+            BadRequestObjectResult model = controller.ReplaceMessage(null) as BadRequestObjectResult;
+
+            // Assert
+            Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
+            mock.Verify(rep => rep.ReplaceMessage(It.IsAny<Message>()), Times.Never);
+        }
+
         [Theory]
-        [ClassData(typeof(MessageTestData))]
-        public void ReplaceMessageBadRequest(Message[] messages)
+        [ClassData(typeof(MessagesTestData))]
+        public void ReplaceMessageNotFound(Message[] messages) 
         {
             // Arrange
             var mock = new Mock<IRepository>();
@@ -195,21 +263,21 @@ namespace Catalog.API.Tests
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
-            BadRequestResult model = controller.ReplaceMessage(messageNotFound) as BadRequestResult;
+            NotFoundObjectResult model = controller.ReplaceMessage(messageNotFound) as NotFoundObjectResult;
 
             // Assert
-            Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
+            Assert.Equal((int?)HttpStatusCode.NotFound, model.StatusCode);
             mock.Verify(rep => rep.ReplaceMessage(It.IsAny<Message>()), Times.Never);
         }
 
         [Theory]
-        [ClassData(typeof(MessageTestData))]
+        [ClassData(typeof(MessagesTestData))]
         public void ReplaceMessageCreated(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
             Message messageReplaced = messages[0];
-            mock.SetupSequence(rep => rep.GetMessage(It.IsAny<int>())).Returns(messageReplaced);
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(messageReplaced);
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
@@ -225,7 +293,7 @@ namespace Catalog.API.Tests
         {
             // Arrange
             var mock = new Mock<IRepository>();            
-            mock.SetupSequence(rep => rep.GetMessage(It.IsAny<int>())).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
@@ -241,10 +309,10 @@ namespace Catalog.API.Tests
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            controller.DeleteMessage(0);
+            controller.DeleteMessage(int.MinValue);
 
             // Assert            
-            mock.Verify(rep => rep.DeleteMessage(It.IsAny<int>()), Times.Never);
+            mock.Verify(rep => rep.RemoveMessage(It.IsAny<int>()), Times.Never);
         }
 
         [Fact]        
@@ -252,32 +320,32 @@ namespace Catalog.API.Tests
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessage(It.IsAny<int>())).Returns(default(Message));
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(default(Message));
             MessageController controller = new MessageController(mock.Object);
 
             // Act
             NotFoundResult model = controller.DeleteMessage(int.MaxValue) as NotFoundResult;
 
             // Assert            
-            mock.Verify(rep => rep.DeleteMessage(int.MaxValue), Times.Never);
+            mock.Verify(rep => rep.RemoveMessage(int.MaxValue), Times.Never);
         }
 
         [Theory]
-        [ClassData(typeof(MessageTestData))]
+        [ClassData(typeof(MessagesTestData))]
         public void DeleteMessageNoContent(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
             Message messageDeleted = messages[0];
             mock.SetupGet(rep => rep.Messages).Returns(messages);
-            mock.SetupSequence(rep => rep.GetMessage(messageDeleted.Id)).Returns(messageDeleted);            
+            mock.SetupSequence(rep => rep.GetMessageById(messageDeleted.Id)).Returns(messageDeleted);            
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
             NoContentResult model = controller.DeleteMessage(messageDeleted.Id) as NoContentResult;
 
             // Assert            
-            mock.Verify(rep => rep.DeleteMessage(It.IsAny<int>()), Times.Once);
+            mock.Verify(rep => rep.RemoveMessage(It.IsAny<int>()), Times.Once);
             Assert.Equal((int?)HttpStatusCode.NoContent, model.StatusCode);
         }
 
@@ -286,18 +354,35 @@ namespace Catalog.API.Tests
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessage(It.IsAny<int>())).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Asssert
             Exception ex = Assert.Throws<FutTalkException>(() => controller.UpdateMessage(
-                int.MaxValue, 
-                It.IsAny<JsonPatchDocument<Message>>()));
+                int.MaxValue,
+                new JsonPatchDocument<Message>()));
             Assert.Equal(typeof(FutTalkException), ex.GetType());
         }
 
         [Fact]
-        public void UpdateMessageBadRequest()
+        public void UpdateMessageBadRequestMessageIsNull()
+        {
+            // Arrange
+            var mock = new Mock<IRepository>();
+            MessageController controller = new MessageController(mock.Object);
+
+            // Act
+            BadRequestObjectResult model = controller.UpdateMessage(
+                It.IsInRange<int>(0, int.MinValue, Range.Inclusive),
+                null) as BadRequestObjectResult;
+
+            // Assert
+            Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
+            mock.Verify(rep => rep.GetMessageById(It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public void UpdateMessageBadRequestMessageIdIsLessThanOne()
         {
             // Arrange
             var mock = new Mock<IRepository>();            
@@ -310,7 +395,7 @@ namespace Catalog.API.Tests
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
-            mock.Verify(rep => rep.GetMessage(It.IsAny<int>()), Times.Never);
+            mock.Verify(rep => rep.GetMessageById(It.IsAny<int>()), Times.Never);
         }
 
         [Fact]
@@ -318,37 +403,38 @@ namespace Catalog.API.Tests
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessage(It.IsAny<int>())).Returns(default(Message));
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(default(Message));
             MessageController controller = new MessageController(mock.Object);
 
             // Act
             NotFoundObjectResult model = controller.UpdateMessage(
                 int.MaxValue,
-                It.IsAny<JsonPatchDocument<Message>>()) as NotFoundObjectResult;
+                new JsonPatchDocument<Message>()) as NotFoundObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.NotFound, model.StatusCode);
-            mock.Verify(rep => rep.GetMessage(It.IsAny<int>()), Times.Once);
+            mock.Verify(rep => rep.GetMessageById(It.IsAny<int>()), Times.Once);
         }
 
         [Theory]
-        [ClassData(typeof(MessageTestData))]
+        [ClassData(typeof(MessagesTestData))]
         public void UpdateMessageOk(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
             Message message = messages[0];
-            mock.SetupSequence(rep => rep.GetMessage(It.IsAny<int>())).Returns(message);
+            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(message);
             MessageController controller = new MessageController(mock.Object);
 
             // Act
             OkObjectResult model = controller.UpdateMessage(
                 message.Id,
-                It.IsAny<JsonPatchDocument<Message>>()) as OkObjectResult;
+                new JsonPatchDocument<Message>()) as OkObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.OK, model.StatusCode);
-            mock.Verify(rep => rep.GetMessage(It.IsAny<int>()), Times.Once);
+            mock.Verify(rep => rep.GetMessageById(It.IsAny<int>()), Times.Once);
+            mock.Verify(rep => rep.UpdateMessage(It.IsAny<int>(), It.IsAny<Message>()), Times.Once);
         }
     }
 }

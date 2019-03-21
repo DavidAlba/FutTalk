@@ -11,7 +11,8 @@ namespace Catalog.API.Infrastructure.EntityConfigurations
             builder.ToTable("Message");
 
             builder.Property(m => m.Id)
-                .ForSqlServerUseSequenceHiLo("message_hilo")
+                // Remove sequence (Incompatible with non-relational databases and other relational database providers (e.g. SqlLite)
+                //.ForSqlServerUseSequenceHiLo("message_hilo")
                 .IsRequired();
 
             builder.Property(m => m.Name)

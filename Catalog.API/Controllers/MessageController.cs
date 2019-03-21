@@ -17,12 +17,15 @@ namespace Catalog.API.Controllers
     {
         private IRepository _repository;
 
-        public MessageController(IRepository repository) => _repository = repository;
+        public MessageController(IRepository repository)
+        {           
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        }
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Message>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(IEnumerable<Message>), (int)HttpStatusCode.NoContent)]
-        public IActionResult GetMessages()
+        public IActionResult GetAllMessages()
         {
             IActionResult result = null;
             IEnumerable<Message> messages = null;
@@ -64,7 +67,7 @@ namespace Catalog.API.Controllers
                 }
                 else
                 {
-                    message = _repository.GetMessage(id);
+                    message = _repository.GetMessageById(id);
                     if (message != null)
                     {
                         result = Ok(message);
@@ -90,7 +93,10 @@ namespace Catalog.API.Controllers
         {
             try
             {
-                IActionResult result = null;  
+                IActionResult result = null;
+
+                if (message == null) return BadRequest($"The message is invalid (null)");
+                if (message.Id <= 0) return BadRequest($"The message id is invalid. Id must be greater than zero");
 
                 if (GetMessage(message.Id) is NotFoundResult)
                 {
@@ -129,6 +135,9 @@ namespace Catalog.API.Controllers
             {
                 IActionResult result = null;
 
+                if (message == null) return BadRequest($"The message is invalid (null)");
+                if (message.Id <= 0) return BadRequest($"The message id is invalid. Id must be greater than zero");
+
                 if (GetMessage(message.Id) is OkObjectResult)
                 {
                     result = CreatedAtAction(
@@ -145,7 +154,7 @@ namespace Catalog.API.Controllers
                 }
                 else
                 {
-                    result = BadRequest();
+                    result = NotFound($"The message with {message.Id} was not found");
                 }
 
                 return result;
@@ -173,9 +182,9 @@ namespace Catalog.API.Controllers
                 }
                 else
                 {
-                    if (_repository.GetMessage(id) != null)
+                    if (_repository.GetMessageById(id) != null)
                     {
-                        _repository.DeleteMessage(id);
+                        _repository.RemoveMessage(id);
                         result = NoContent();
                     }
                     else
@@ -203,16 +212,16 @@ namespace Catalog.API.Controllers
 
             try
             {
-                if (id <= 0)
-                {
-                    result = BadRequest($"The id {id} is not valid");
-                }
+                if (id <= 0) return BadRequest($"The id {id} is not valid. I dmust be greater than zero");
+                if (patch == null) return BadRequest($"The patch argument is not valid");
+
                 else
                 {
-                    message = _repository.GetMessage(id);
+                    message = _repository.GetMessageById(id);
                     if (message != null)
                     {
                         patch?.ApplyTo(message);
+                        message = _repository.UpdateMessage(id, message);
                         result = Ok(message);
                     }
                     else

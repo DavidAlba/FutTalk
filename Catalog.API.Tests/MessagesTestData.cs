@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Catalog.API.Tests
 {
-    public class MessageTestData : IEnumerable<object[]>
+    public class MessagesTestData : IEnumerable<object[]>
     {
 
         public IEnumerator<object[]> GetEnumerator()
@@ -23,7 +23,7 @@ namespace Catalog.API.Tests
                     new Message {
                         Id = i + 1,
                         Name = $"Name {i + 1}",
-                        Body = $"Boday {i + 1}"
+                        Body = $"Body {i + 1}"
                     };
         }
     }
