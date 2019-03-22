@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Infrastructure\Migrations\SqliteMigrations\20190321141541_InitialCreate.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Infrastructure\Migrations\SqliteMigrations\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

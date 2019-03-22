@@ -19,7 +19,7 @@ namespace Catalog.API
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<SqliteMessagingContext>();
+            //services.AddDbContext<SqliteMessagingContext>();
             services.AddSingleton<IRepository, MessagingInMemoryRepository>();
             services.AddMvc();
                //.AddXmlDataContractSerializerFormatters()
@@ -30,7 +30,13 @@ namespace Catalog.API
                //    opts.RespectBrowserAcceptHeader = true;
                //    opts.ReturnHttpNotAcceptable = true;
                //});
-            
+
+            //.AddJsonOptions(options =>
+            // {
+            //     //Revert to PascalCasing for JSON handling
+            //     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+            // });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

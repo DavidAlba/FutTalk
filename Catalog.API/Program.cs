@@ -28,11 +28,13 @@ namespace Catalog.API
                 
                 IWebHost host = BuildWebHost(configuration, args);
 
-                Log.Information("Applying migrations ({ApplicationContext})...", AppName);
-                SqliteMessagingContextDesignFactory messagingContextDesignFactory = new SqliteMessagingContextDesignFactory();
-                SqliteMessagingContext messagingContext = messagingContextDesignFactory.CreateDbContext(null);
-                SqliteMessagingContextSeed messagingContextSeeder = new SqliteMessagingContextSeed(messagingContext);
-                messagingContextSeeder.Seed();
+                //Log.Information("Applying migrations ({ApplicationContext})...", AppName);
+                //SqliteMessagingContextDesignFactory messagingContextDesignFactory = new SqliteMessagingContextDesignFactory();
+                //SqliteMessagingContext messagingContext = messagingContextDesignFactory.CreateDbContext(null);
+                //messagingContext.Database.EnsureCreated();
+
+                //SqliteMessagingContextSeed messagingContextSeeder = new SqliteMessagingContextSeed(messagingContext);
+                //messagingContextSeeder.Seed();
 
                 Log.Information("Starting web host ({ApplicationContext})...", AppName);
                 host.Run();

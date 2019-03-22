@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Catalog.API.Tests
@@ -17,28 +19,30 @@ namespace Catalog.API.Tests
     public class MessageControllerTests
     {
         [Fact]
-        public void GetAllMessagesThrowsException()
+        public async void GetAllMessagesThrowsException()
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupGet(rep => rep.Messages).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetAllMessagesAsync()).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert            
-            Exception ex = Assert.Throws<FutTalkException>(() => controller.GetAllMessages());
+            Exception ex = await Assert.ThrowsAsync<FutTalkException>(async () => await controller.GetAllMessages());
             Assert.Equal(expected: typeof(FutTalkException), actual: ex.GetType());
         }
 
         [Fact]
-        public void GetAllMessagesNoContent()
+        public async void GetAllMessagesNoContent()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
-            mock.SetupGet(rep => rep.Messages).Returns(new List<Message>());
+            IEnumerable<Message> emptyList = new List<Message>().AsEnumerable<Message>();
+            var mock = new Mock<IRepository>();            
+            mock.SetupSequence(rep => rep.GetAllMessagesAsync())
+                .Returns(Task<IEnumerable<Message>>.Run(() => emptyList));
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            NoContentResult model = controller.GetAllMessages() as NoContentResult;
+            NoContentResult model = await controller.GetAllMessages() as NoContentResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.NoContent, model.StatusCode);
@@ -46,15 +50,16 @@ namespace Catalog.API.Tests
 
         [Theory]
         [ClassData(typeof(MessagesTestData))]
-        public void GetAllMessagesOk(Message[] messages)
+        public async void GetAllMessagesOk(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupGet(rep => rep.Messages).Returns(messages);
+            mock.SetupSequence(rep => rep.GetAllMessagesAsync())
+                .Returns(() => Task<IEnumerable<Message>>.Run(() => messages.AsEnumerable<Message>()));
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            OkObjectResult model = controller.GetAllMessages() as OkObjectResult;
+            OkObjectResult model = await controller.GetAllMessages() as OkObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.OK, model.StatusCode);
@@ -62,27 +67,30 @@ namespace Catalog.API.Tests
         }
 
         [Fact]
-        public void GetMessageByIdThrowsException()
+        public async void GetMessageByIdThrowsException()
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = Assert.Throws<FutTalkException>(() => controller.GetMessage(1));
+            Exception ex = await Assert.ThrowsAsync<FutTalkException>(
+                async () => await controller.GetMessage(int.MaxValue)
+            );
+        
             Assert.Equal(expected: typeof(FutTalkException), actual: ex.GetType());
         }
 
         [Fact]
-        public void GetMessageByIdBadRequest()
+        public async void GetMessageByIdBadRequest()
         {
             // Arrange
             var mock = new Mock<IRepository>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            BadRequestObjectResult model = controller.GetMessage(It.IsInRange<int>(0, int.MinValue, Range.Inclusive)) as BadRequestObjectResult;
+            BadRequestObjectResult model = await controller.GetMessage(It.IsInRange<int>(0, int.MinValue, Range.Inclusive)) as BadRequestObjectResult;
 
             // Assert            
             Assert.Equal(400, model.StatusCode);
@@ -91,15 +99,16 @@ namespace Catalog.API.Tests
 
         [Theory]
         [ClassData(typeof(MessagesTestData))]
-        public void GetMessageByIdNotFound(Message[] messages)
+        public async void GetMessageByIdNotFound(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupGet(m => m.Messages).Returns(messages);
+            mock.SetupSequence(rep => rep.GetAllMessagesAsync())
+                .Returns(Task<IEnumerable<Message>>.Run(() => messages.AsEnumerable<Message>()));            
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            NotFoundResult model = controller.GetMessage(int.MaxValue) as NotFoundResult;
+            NotFoundResult model = await controller.GetMessage(int.MaxValue) as NotFoundResult;
 
             // Assert            
             Assert.Equal((int?)HttpStatusCode.NotFound, model.StatusCode);
@@ -107,56 +116,65 @@ namespace Catalog.API.Tests
 
         [Theory]
         [ClassData(typeof(MessagesTestData))]
-        public void GetMessageByIdOk(Message[] messages)
+        public async void GetMessageByIdOk(Message[] messages)
         {
             // Arrange
-            var mock = new Mock<IRepository>();
-            var message = messages.SingleOrDefault<Message>((m) => m.Id == 2);
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(message);
+            var messageToFind = messages.SingleOrDefault<Message>((m) => m.Id == 2);
+            var mock = new Mock<IRepository>();            
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
+                .Returns(Task<Message>.Run(() => messageToFind));
             MessageController controller = new MessageController(mock.Object);
-
+        
             // Act            
-            OkObjectResult model = controller.GetMessage(message.Id) as OkObjectResult;
+            OkObjectResult model = await controller.GetMessage(messageToFind.Id) as OkObjectResult;
 
             // Assert   
             Assert.Equal((int?)HttpStatusCode.OK, model.StatusCode);
-            Assert.Equal(message, (Message)model.Value, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messageToFind, (Message)model.Value, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
         }
 
         [Fact]
         public void CreateMessageThrowsException()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.AddMessage(It.IsAny<Message>())).Throws<FutTalkException>();
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
+            var mock = new Mock<IRepository>();            
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = Assert.Throws<FutTalkException>(() => controller.CreateMessage(new Message() { Id = int.MaxValue }));
+            Exception ex = Assert.ThrowsAsync<FutTalkException>(
+                async () => await controller.CreateMessage(new Message() { Id = int.MaxValue })
+            )?.Result;
             Assert.Equal(expected: typeof(FutTalkException), actual: ex.GetType());
         }
 
-        [Theory]
-        [ClassData(typeof(MessagesTestData))]
-        public void CreateMessageCreated(Message[] messages)
+        [Fact]
+        public async void CreateMessageCreated()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
-            Message messageCreated = new Message { Id = int.MaxValue, Name = $"Name {int.MaxValue}", Body = $"Body {int.MaxValue}" };
+            Message messageCreated =
+                new Message
+                {
+                    Id = int.MaxValue,
+                    Name = $"Name {int.MaxValue}",
+                    Body = $"Body {int.MaxValue}"
+                };
+
+            var mock = new Mock<IRepository>();            
+
             MessageController controller = new MessageController(mock.Object);
-            mock.SetupGet(rep => rep.Messages).Returns(messages);
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Returns(Task<Message>.Run(() => default(Message)));
 
             // Act            
-            CreatedAtActionResult model = controller.CreateMessage(messageCreated) as CreatedAtActionResult;
+            CreatedAtActionResult model = await controller.CreateMessage(messageCreated) as CreatedAtActionResult;
 
             // Assert
-            mock.Verify(rep => rep.AddMessage(It.IsAny<Message>()), Times.Once);
+            mock.Verify(rep => rep.AddMessageAsync(It.IsAny<Message>()), Times.Once);
             Assert.Equal((int?)HttpStatusCode.Created, model.StatusCode);
         }
 
         [Fact]
-        public void CreateMessageBadRequestMessageIdIsLessThanOne()
+        public async void CreateMessageBadRequestMessageIdIsLessThanOne()
         {
             // Arrange
             var mock = new Mock<IRepository>();
@@ -169,39 +187,39 @@ namespace Catalog.API.Tests
             };
 
             // Act            
-            BadRequestObjectResult model = controller.CreateMessage(message) as BadRequestObjectResult;
+            BadRequestObjectResult model = await controller.CreateMessage(message) as BadRequestObjectResult;
 
             // Assert
-            mock.Verify(m => m.AddMessage(It.IsAny<Message>()), Times.Never);
+            mock.Verify(rep => rep.AddMessageAsync(It.IsAny<Message>()), Times.Never);
             Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
         }
 
         [Fact]        
-        public void CreateMessageBadRequestMessageIsNull()
+        public async  void CreateMessageBadRequestMessageIsNull()
         {
             // Arrange
             var mock = new Mock<IRepository>();
             MessageController controller = new MessageController(mock.Object);            
 
             // Act            
-            BadRequestObjectResult model = controller.CreateMessage(null) as BadRequestObjectResult;
+            BadRequestObjectResult model = await controller.CreateMessage(null) as BadRequestObjectResult;
 
             // Assert
-            mock.Verify(m => m.AddMessage(It.IsAny<Message>()), Times.Never);
+            mock.Verify(rep => rep.AddMessageAsync(It.IsAny<Message>()), Times.Never);
             Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
         }
 
         [Theory]
         [ClassData(typeof(MessagesTestData))]
-        public void CreateMessageBadRequestMessageAlreadyExists(Message[] messages)
+        public async void CreateMessageBadRequestMessageAlreadyExists(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
             MessageController controller = new MessageController(mock.Object);
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(messages[0]);           
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Returns(Task<Message>.Run(() => messages[0]));           
 
             // Act            
-            BadRequestObjectResult model = controller.CreateMessage(messages[0]) as BadRequestObjectResult;
+            BadRequestObjectResult model = await controller.CreateMessage(messages[0]) as BadRequestObjectResult;
 
             // Assert
             mock.Verify(m => m.AddMessage(It.IsAny<Message>()), Times.Never);
@@ -209,158 +227,167 @@ namespace Catalog.API.Tests
         }
 
         [Fact]
-        public void ReplaceMessageThrowsException()
+        public async void ReplaceMessageThrowsException()
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
-            mock.SetupSequence(rep => rep.AddMessage(It.IsAny<Message>())).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();            
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = Assert.Throws<FutTalkException>(() => controller.ReplaceMessage(new Message() { Id = int.MaxValue }));
+            Exception ex = await Assert.ThrowsAsync<FutTalkException>(async () => await controller.ReplaceMessage(new Message() { Id = int.MaxValue }));
             Assert.Equal(typeof(FutTalkException), ex.GetType());
         }
 
         [Fact]
-        public void ReplaceMessageIdIsLessThanOne()
+        public async void ReplaceMessageIdIsLessThanOne()
         {
             // Arrange
             var mock = new Mock<IRepository>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
-            BadRequestObjectResult model = controller.ReplaceMessage(new Message() { Id = int.MinValue }) as BadRequestObjectResult;
+            BadRequestObjectResult model = await controller.ReplaceMessage(new Message() { Id = int.MinValue }) as BadRequestObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
-            mock.Verify(rep => rep.ReplaceMessage(It.IsAny<Message>()), Times.Never);
+            mock.Verify(rep => rep.ReplaceMessageAsync(It.IsAny<Message>()), Times.Never);
         }
 
         [Fact]
-        public void ReplaceMessageIsNull()
+        public async void ReplaceMessageIsNull()
         {
             // Arrange
             var mock = new Mock<IRepository>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
-            BadRequestObjectResult model = controller.ReplaceMessage(null) as BadRequestObjectResult;
+            BadRequestObjectResult model = await controller.ReplaceMessage(null) as BadRequestObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
-            mock.Verify(rep => rep.ReplaceMessage(It.IsAny<Message>()), Times.Never);
+            mock.Verify(rep => rep.ReplaceMessageAsync(It.IsAny<Message>()), Times.Never);
         }
 
-        [Theory]
-        [ClassData(typeof(MessagesTestData))]
-        public void ReplaceMessageNotFound(Message[] messages) 
+        [Fact]
+        public async void ReplaceMessageNotFound() 
         {
             // Arrange
-            var mock = new Mock<IRepository>();
             Message messageNotFound = new Message() { Id = Int32.MaxValue, Name = "Not found", Body = "Not found" };
-            mock.SetupGet(m => m.Messages).Returns(messages);
+            var mock = new Mock<IRepository>();
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
+                .Returns(Task<Message>.Run(() => default(Message)));
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
-            NotFoundObjectResult model = controller.ReplaceMessage(messageNotFound) as NotFoundObjectResult;
+            NotFoundObjectResult model = await controller.ReplaceMessage(messageNotFound) as NotFoundObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.NotFound, model.StatusCode);
-            mock.Verify(rep => rep.ReplaceMessage(It.IsAny<Message>()), Times.Never);
+            mock.Verify(rep => rep.ReplaceMessageAsync(It.IsAny<Message>()), Times.Never);
         }
 
         [Theory]
         [ClassData(typeof(MessagesTestData))]
-        public void ReplaceMessageCreated(Message[] messages)
+        public async void ReplaceMessageCreated(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
             Message messageReplaced = messages[0];
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(messageReplaced);
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
+                .Returns(
+                    Task<Message>.Run(() => {
+                        return messageReplaced;
+                    }
+                )
+            );
+
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
-            CreatedAtActionResult model = controller.ReplaceMessage(messageReplaced) as CreatedAtActionResult;
+            CreatedAtActionResult model = await controller.ReplaceMessage(messageReplaced) as CreatedAtActionResult;
 
             // Assert            
-            mock.Verify(rep => rep.ReplaceMessage(It.IsAny<Message>()), Times.Once);
+            mock.Verify(rep => rep.ReplaceMessageAsync(It.IsAny<Message>()), Times.Once);
             Assert.Equal((int?)HttpStatusCode.Created, model.StatusCode);
         }
 
         [Fact]
-        public void DeleteMessageThrowsException()
+        public async void DeleteMessageThrowsException()
         {
             // Arrange
             var mock = new Mock<IRepository>();            
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = Assert.Throws<FutTalkException>(() => controller.DeleteMessage(int.MaxValue));
+            Exception ex = await Assert.ThrowsAsync<FutTalkException>(
+                async () => await controller.DeleteMessage(int.MaxValue)
+                );
+                
             Assert.Equal(typeof(FutTalkException), ex.GetType());
         }
 
         [Fact]
-        public void DeleteMessageBadRequest()
+        public async void DeleteMessageBadRequest()
         {
             // Arrange
             var mock = new Mock<IRepository>();            
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            controller.DeleteMessage(int.MinValue);
+            await controller.DeleteMessage(int.MinValue);
 
             // Assert            
-            mock.Verify(rep => rep.RemoveMessage(It.IsAny<int>()), Times.Never);
+            mock.Verify(rep => rep.RemoveMessageAsync(It.IsAny<int>()), Times.Never);
         }
 
         [Fact]        
-        public void DeleteMessageNotFound()
+        public async void DeleteMessageNotFound()
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(default(Message));
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Returns(Task<Message>.Run(() => default(Message)));
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            NotFoundResult model = controller.DeleteMessage(int.MaxValue) as NotFoundResult;
+            NotFoundResult model = await controller.DeleteMessage(int.MaxValue) as NotFoundResult;
 
             // Assert            
-            mock.Verify(rep => rep.RemoveMessage(int.MaxValue), Times.Never);
+            mock.Verify(rep => rep.RemoveMessageAsync(int.MaxValue), Times.Never);
         }
 
         [Theory]
         [ClassData(typeof(MessagesTestData))]
-        public void DeleteMessageNoContent(Message[] messages)
+        public async void DeleteMessageNoContent(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
             Message messageDeleted = messages[0];
-            mock.SetupGet(rep => rep.Messages).Returns(messages);
-            mock.SetupSequence(rep => rep.GetMessageById(messageDeleted.Id)).Returns(messageDeleted);            
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(messageDeleted.Id)).Returns(Task<Message>.Run(() => messageDeleted));
             MessageController controller = new MessageController(mock.Object);
-
+        
             // Act            
-            NoContentResult model = controller.DeleteMessage(messageDeleted.Id) as NoContentResult;
+            NoContentResult model = await controller.DeleteMessage(messageDeleted.Id) as NoContentResult;
 
             // Assert            
-            mock.Verify(rep => rep.RemoveMessage(It.IsAny<int>()), Times.Once);
+            mock.Verify(rep => rep.RemoveMessageAsync(It.IsAny<int>()), Times.Once);
             Assert.Equal((int?)HttpStatusCode.NoContent, model.StatusCode);
         }
 
         [Fact]
-        public void UpdateMessageThrowsException()
+        public async void UpdateMessageThrowsException()
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
+            
+            // Act & Assert
+            Exception ex = await Assert.ThrowsAsync<FutTalkException>(
+                async () => { await controller.UpdateMessage(int.MaxValue, new JsonPatchDocument<Message>()); }
+            );
 
-            // Act & Asssert
-            Exception ex = Assert.Throws<FutTalkException>(() => controller.UpdateMessage(
-                int.MaxValue,
-                new JsonPatchDocument<Message>()));
             Assert.Equal(typeof(FutTalkException), ex.GetType());
         }
 
@@ -374,7 +401,7 @@ namespace Catalog.API.Tests
             // Act
             BadRequestObjectResult model = controller.UpdateMessage(
                 It.IsInRange<int>(0, int.MinValue, Range.Inclusive),
-                null) as BadRequestObjectResult;
+                null).Result as BadRequestObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
@@ -382,59 +409,63 @@ namespace Catalog.API.Tests
         }
 
         [Fact]
-        public void UpdateMessageBadRequestMessageIdIsLessThanOne()
+        public async void UpdateMessageBadRequestMessageIdIsLessThanOne()
         {
             // Arrange
             var mock = new Mock<IRepository>();            
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            BadRequestObjectResult model = controller.UpdateMessage(
+            BadRequestObjectResult model = await controller.UpdateMessage(
                 It.IsInRange<int>(0, int.MinValue, Range.Inclusive),
                 It.IsAny<JsonPatchDocument<Message>>()) as BadRequestObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.BadRequest, model.StatusCode);
-            mock.Verify(rep => rep.GetMessageById(It.IsAny<int>()), Times.Never);
+            mock.Verify(rep => rep.GetMessageByIdAsync(It.IsAny<int>()), Times.Never);
+            mock.Verify(rep => rep.UpdateMessageAsync(It.IsAny<int>(), It.IsAny<Message>()), Times.Never);
         }
 
         [Fact]
-        public void UpdateMessageNotFound()
+        public async void UpdateMessageNotFound()
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(default(Message));
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
+                .Returns(Task<Message>.Run(() => default(Message)));
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            NotFoundObjectResult model = controller.UpdateMessage(
+            NotFoundObjectResult model = await controller.UpdateMessage(
                 int.MaxValue,
                 new JsonPatchDocument<Message>()) as NotFoundObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.NotFound, model.StatusCode);
-            mock.Verify(rep => rep.GetMessageById(It.IsAny<int>()), Times.Once);
+            mock.Verify(rep => rep.GetMessageByIdAsync(It.IsAny<int>()), Times.Once);
+            mock.Verify(rep => rep.UpdateMessageAsync(It.IsAny<int>(), It.IsAny<Message>()), Times.Never);
         }
 
         [Theory]
         [ClassData(typeof(MessagesTestData))]
-        public void UpdateMessageOk(Message[] messages)
+        public async void UpdateMessageOk(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            Message message = messages[0];
-            mock.SetupSequence(rep => rep.GetMessageById(It.IsAny<int>())).Returns(message);
+            Message messageToUpdate = messages[0];
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
+                .Returns(Task<Message>.Run(() => messageToUpdate));
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            OkObjectResult model = controller.UpdateMessage(
-                message.Id,
+            OkObjectResult model = await controller.UpdateMessage(
+                messageToUpdate.Id,
                 new JsonPatchDocument<Message>()) as OkObjectResult;
 
             // Assert
             Assert.Equal((int?)HttpStatusCode.OK, model.StatusCode);
-            mock.Verify(rep => rep.GetMessageById(It.IsAny<int>()), Times.Once);
-            mock.Verify(rep => rep.UpdateMessage(It.IsAny<int>(), It.IsAny<Message>()), Times.Once);
+            mock.Verify(rep => rep.GetMessageByIdAsync(It.IsAny<int>()), Times.Once);
+            mock.Verify(rep => rep.UpdateMessageAsync(It.IsAny<int>(), It.IsAny<Message>()), Times.Once);
         }
     }
 }

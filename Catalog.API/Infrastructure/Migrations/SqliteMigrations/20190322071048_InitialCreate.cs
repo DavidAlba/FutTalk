@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace Catalog.API.Infrastructure.Migrations.SqliteMigrations
+namespace Catalog.API.infrastructure.Migrations.SqliteMigrations
 {
     public partial class InitialCreate : Migration
     {

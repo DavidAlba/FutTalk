@@ -22,59 +22,77 @@ namespace Catalog.API.Models
             set => throw new NotImplementedException();
         }
 
-        public Message AddMessage(Message message)
+        public IEnumerable<Message> GetAllMessages()
+        {
+            return GetAllMessagesAsync()?.Result;
+        }
+
+        public async Task<IEnumerable<Message>> GetAllMessagesAsync()
+        {
+            return await _context.Messages.AsQueryable<Message>().ToListAsync();
+        }
+
+        public Message AddMessage(Message message) => AddMessageAsync(message)?.Result;
+
+        public async Task<Message> AddMessageAsync(Message message)
         {
             Message result = null;
             Message messageFromDatabase = null;
 
             if (message == null || message?.Id <= 0) return null;
 
-            messageFromDatabase = this.GetMessageById(message.Id);
+            messageFromDatabase = await GetMessageByIdAsync(message.Id);
             if (messageFromDatabase == null)
             {
-               Message entity = _context.Messages.Add(
-                    new Message
-                    {
-                        Id = message.Id,
-                        Name = message.Name,
-                        Body = message.Body
-                    }
-                ).Entity;
+                Message entity = _context.Messages.Add(
+                     new Message
+                     {
+                         Id = message.Id,
+                         Name = message.Name,
+                         Body = message.Body
+                     }
+                 ).Entity;
 
-                _context.SaveChanges();
-                result = GetMessageById(message.Id);
+                await _context.SaveChangesAsync();
+                result = await GetMessageByIdAsync(message.Id);
             }
 
             return result;
         }
 
-        public void RemoveMessage(int id)
+        public void RemoveMessage(int id) => RemoveMessageAsync(id)?.Wait();
+
+        public async Task RemoveMessageAsync(int id)
         {
-            Message message = this.GetMessageById(id);
+            Message message = await GetMessageByIdAsync(id);
             if (message != null)
             {
                 _context.Messages.Remove(message);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
         }
 
-        public Message GetMessageById(int id)
+        public Message GetMessageById(int id) => GetMessageByIdAsync(id)?.Result;
+
+        public async Task<Message> GetMessageByIdAsync(int id)
         {
-            return _context.Messages.SingleOrDefault(m => m.Id == id);
+            return await _context.Messages.SingleOrDefaultAsync(m => m.Id == id);
         }
 
-        public Message ReplaceMessage(Message message)
+        public Message ReplaceMessage(Message message) => ReplaceMessageAsync(message)?.Result;
+
+        public async Task<Message> ReplaceMessageAsync(Message message)
         {
             Message messagetoDelete = null;
             Message result = null;
 
-            if(message == null || message?.Id <= 0) return null;
+            if (message == null || message?.Id <= 0) return null;
 
             using (var transaction = _context.Database.BeginTransaction())
             {
                 try
                 {
-                    messagetoDelete = this.GetMessageById(message.Id);
+                    messagetoDelete = await GetMessageByIdAsync(message.Id);
                     if (messagetoDelete != null)
                     {
                         _context.Messages.Remove(messagetoDelete);
@@ -87,8 +105,8 @@ namespace Catalog.API.Models
                             }
                         );
 
-                        _context.SaveChanges();
-                        result = GetMessageById(message.Id);
+                        await _context.SaveChangesAsync();
+                        result = await GetMessageByIdAsync(message.Id);
                         transaction.Commit();
                     }
                 }
@@ -101,21 +119,23 @@ namespace Catalog.API.Models
             }
         }
 
-        public Message UpdateMessage(int messageId, Message message)
+        public Message UpdateMessage(int messageId, Message message) => UpdateMessageAsync(messageId, message)?.Result;
+
+        public async Task<Message> UpdateMessageAsync(int messageId, Message message)
         {
             Message messageToUpdate = null;
 
             if (messageId <= 0 || message == null) return null;
 
-            messageToUpdate = GetMessageById(messageId);
+            messageToUpdate = await GetMessageByIdAsync(messageId);
             if (messageToUpdate != null)
             {
                 messageToUpdate = message;
                 _context.Messages.Update(messageToUpdate);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
-            
-            return GetMessageById(message.Id);
+
+            return await GetMessageByIdAsync(message.Id);
         }
     }
 }

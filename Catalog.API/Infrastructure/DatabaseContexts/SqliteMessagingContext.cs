@@ -24,7 +24,7 @@ namespace Catalog.API.Infrastructure.DatabaseContexts
     {
         public SqliteMessagingContext CreateDbContext(string[] args)
         {
-            var connectionString = "Data Source=c:\\FutTalk.MessagesDataBase.db;";
+            var connectionString = "Data Source=\\FutTalk.MessagesDataBase.db;";
             var optionsBuilder = 
                 new DbContextOptionsBuilder<SqliteMessagingContext>().UseSqlite(connectionString);
 

@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Catalog.API.Infrastructure.Migrations.SqliteMigrations
+namespace Catalog.API.infrastructure.Migrations.SqliteMigrations
 {
     [DbContext(typeof(SqliteMessagingContext))]
-    [Migration("20190321141541_InitialCreate")]
+    [Migration("20190322071048_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

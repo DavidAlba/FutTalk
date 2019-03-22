@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Catalog.API.Infrastructure.Migrations.SqliteMigrations
+namespace Catalog.API.infrastructure.Migrations.SqliteMigrations
 {
     [DbContext(typeof(SqliteMessagingContext))]
     partial class SqliteMessagingContextModelSnapshot : ModelSnapshot

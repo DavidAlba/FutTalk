@@ -25,14 +25,14 @@ namespace Catalog.API.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Message>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(IEnumerable<Message>), (int)HttpStatusCode.NoContent)]
-        public IActionResult GetAllMessages()
+        public async Task<IActionResult> GetAllMessages()
         {
             IActionResult result = null;
             IEnumerable<Message> messages = null;
 
             try
             {
-                messages = _repository.Messages;
+                messages = await _repository.GetAllMessagesAsync();
                 if (messages?.Count() == 0)
                 {
                     result = NoContent();
@@ -54,7 +54,7 @@ namespace Catalog.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(Message), (int)HttpStatusCode.OK)]
-        public IActionResult GetMessage(int id)
+        public async Task<IActionResult> GetMessage(int id)
         {
             IActionResult result = null;
             Message message = null;
@@ -67,7 +67,7 @@ namespace Catalog.API.Controllers
                 }
                 else
                 {
-                    message = _repository.GetMessageById(id);
+                    message = await _repository.GetMessageByIdAsync(id);
                     if (message != null)
                     {
                         result = Ok(message);
@@ -89,7 +89,7 @@ namespace Catalog.API.Controllers
         [HttpPost]        
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(Message), (int)HttpStatusCode.Created)]
-        public IActionResult CreateMessage([FromBody]Message message)
+        public async Task<IActionResult> CreateMessage([FromBody]Message message)
         {
             try
             {
@@ -98,11 +98,11 @@ namespace Catalog.API.Controllers
                 if (message == null) return BadRequest($"The message is invalid (null)");
                 if (message.Id <= 0) return BadRequest($"The message id is invalid. Id must be greater than zero");
 
-                if (GetMessage(message.Id) is NotFoundResult)
+                if (await _repository.GetMessageByIdAsync(message.Id) == null)
                 {
                     result = CreatedAtAction(
                         actionName: nameof(MessageController),
-                        value: _repository.AddMessage(
+                        value: _repository.AddMessageAsync(
                             new Message()
                             {
                                 Id = message.Id,
@@ -129,7 +129,7 @@ namespace Catalog.API.Controllers
         [HttpPut]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(Message), (int)HttpStatusCode.Created)]
-        public IActionResult ReplaceMessage([FromBody] Message message)
+        public async Task<IActionResult> ReplaceMessage([FromBody] Message message)
         {
             try
             {
@@ -138,11 +138,11 @@ namespace Catalog.API.Controllers
                 if (message == null) return BadRequest($"The message is invalid (null)");
                 if (message.Id <= 0) return BadRequest($"The message id is invalid. Id must be greater than zero");
 
-                if (GetMessage(message.Id) is OkObjectResult)
+                if (await _repository.GetMessageByIdAsync(message.Id) != null)
                 {
                     result = CreatedAtAction(
                         actionName: nameof(MessageController),
-                        value: _repository.ReplaceMessage(
+                        value: await _repository.ReplaceMessageAsync(
                             new Message()
                             {
                                 Id = message.Id,
@@ -170,7 +170,7 @@ namespace Catalog.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType((int)HttpStatusCode.NoContent)]
-        public IActionResult DeleteMessage(int id)
+        public async Task<IActionResult> DeleteMessage(int id)
         {
             IActionResult result = null;
 
@@ -182,9 +182,9 @@ namespace Catalog.API.Controllers
                 }
                 else
                 {
-                    if (_repository.GetMessageById(id) != null)
+                    if (await _repository.GetMessageByIdAsync(id) != null)
                     {
-                        _repository.RemoveMessage(id);
+                        await _repository.RemoveMessageAsync(id);
                         result = NoContent();
                     }
                     else
@@ -205,7 +205,7 @@ namespace Catalog.API.Controllers
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(Message), (int)HttpStatusCode.OK)]
-        public IActionResult UpdateMessage(int id, [FromBody]JsonPatchDocument<Message> patch)
+        public async Task<IActionResult> UpdateMessage(int id, [FromBody]JsonPatchDocument<Message> patch)
         {
             IActionResult result = null;
             Message message = null;
@@ -214,21 +214,18 @@ namespace Catalog.API.Controllers
             {
                 if (id <= 0) return BadRequest($"The id {id} is not valid. I dmust be greater than zero");
                 if (patch == null) return BadRequest($"The patch argument is not valid");
-
+                
+                message = await _repository.GetMessageByIdAsync(id);
+                if (message != null)
+                {
+                    patch?.ApplyTo(message);
+                    message = await _repository.UpdateMessageAsync(id, message);
+                    result = Ok(message);
+                }
                 else
                 {
-                    message = _repository.GetMessageById(id);
-                    if (message != null)
-                    {
-                        patch?.ApplyTo(message);
-                        message = _repository.UpdateMessage(id, message);
-                        result = Ok(message);
-                    }
-                    else
-                    {
-                        result = NotFound($"The message with id {id} was not found");
-                    }
-                }
+                    result = NotFound($"The message with id {id} was not found");
+                }             
                 
                 return result;
             }
