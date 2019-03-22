@@ -176,7 +176,7 @@ namespace Catalog.API.Tests
 
             // Assert
             Assert.Null(messageReplaced);
-            Assert.Equal(messages, Repository.Messages, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages, Repository.GetAllMessages(), Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
         }
 
         [Theory]
@@ -199,7 +199,7 @@ namespace Catalog.API.Tests
 
             // Assert
             Assert.Null(messageReplaced);
-            Assert.Equal(messages, Repository.Messages, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages, Repository.GetAllMessages(), Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
         }
 
         [Theory]
@@ -231,7 +231,7 @@ namespace Catalog.API.Tests
 
             // Assert
             Assert.Null(messageReplaced);
-            Assert.Equal(messages, Repository.Messages, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages, Repository.GetAllMessages(), Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
         }
 
         [Theory]
@@ -293,7 +293,7 @@ namespace Catalog.API.Tests
 
             // Assert
             Assert.Null(messageUpdated);
-            Assert.Equal(messages, Repository.Messages, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages, Repository.GetAllMessages(), Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
         }
 
         [Theory]
@@ -318,7 +318,7 @@ namespace Catalog.API.Tests
 
             // Assert
             Assert.Null(messageUpdated);
-            Assert.Equal(messages, Repository.Messages, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages, Repository.GetAllMessages(), Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
         }
 
         [Theory]
@@ -350,7 +350,7 @@ namespace Catalog.API.Tests
 
             // Assert
             Assert.Null(messageUpdated);
-            Assert.Equal(messages, Repository.Messages, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages, Repository.GetAllMessages(), Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
         }
 
         [Theory]
@@ -445,7 +445,7 @@ namespace Catalog.API.Tests
             );
 
             // Act
-            IEnumerable<Message> messagesFromRepository = Repository.Messages;
+            IEnumerable<Message> messagesFromRepository = Repository.GetAllMessages();
 
             // Assert            
             Assert.Equal(messages, messagesFromRepository, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
@@ -455,7 +455,7 @@ namespace Catalog.API.Tests
         public void GetAllMessagesNoContent()
         {
             // Arrange & Act
-            IEnumerable<Message> messagesFromRepository = Repository.Messages;
+            IEnumerable<Message> messagesFromRepository = Repository.GetAllMessages();
 
             // Assert            
             Assert.Empty(messagesFromRepository);

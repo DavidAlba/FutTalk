@@ -17,7 +17,7 @@ namespace Catalog.API.Models
                 };
         }
 
-        public IEnumerable<Message> Messages { get; set; }
+        private IEnumerable<Message> Messages { get; set; }
 
         public IEnumerable<Message> GetAllMessages() => Messages.AsQueryable<Message>().ToList();
 

@@ -5,7 +5,6 @@ namespace Catalog.API.Models
 {  
     public interface IRepository
     {       
-        IEnumerable<Message> Messages { get; set; }
         IEnumerable<Message> GetAllMessages();
         Task<IEnumerable<Message>> GetAllMessagesAsync();
         Message GetMessageById(int id);

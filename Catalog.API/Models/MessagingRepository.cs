@@ -15,12 +15,7 @@ namespace Catalog.API.Models
         {            
             _context = context ?? throw new ArgumentNullException(nameof(context));
             ((DbContext)context).ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.TrackAll;
-        }
-
-        public IEnumerable<Message> Messages {
-            get => _context.Messages.ToList();
-            set => throw new NotImplementedException();
-        }
+        }       
 
         public IEnumerable<Message> GetAllMessages()
         {
