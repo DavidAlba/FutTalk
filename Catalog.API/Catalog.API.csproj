@@ -8,6 +8,15 @@
 
   <ItemGroup>
     <Compile Remove="Infrastructure\Migrations\SqliteMigrations\20190321141541_InitialCreate.cs" />
+    <Compile Remove="Infrastructure\Migrations\SqlServerMigrations\20190403084848_InitialCreate.cs" />
+    <Compile Remove="Infrastructure\Migrations\SqlServerMigrations\20190403180147_InitialCreate.cs" />
+    <Compile Remove="Infrastructure\Migrations\SqlServerMigrations\20190403180518_InitialCreate.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Dockerfile.original" />
+    <None Remove="Dockerfile1.original" />
+    <None Remove="Dockerfile2.original" />
   </ItemGroup>
 
   <ItemGroup>

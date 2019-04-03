@@ -101,8 +101,8 @@ namespace Catalog.API.Controllers
 
                 if (await _repository.GetMessageByIdAsync(message.Id) == null)
                 {
-                    result = CreatedAtAction(
-                        actionName: nameof(MessageController),
+                    result = this.CreatedAtRoute(
+                        routeName: "Default",                        
                         value: _repository.AddMessageAsync(
                             new Message()
                             {
@@ -141,8 +141,8 @@ namespace Catalog.API.Controllers
 
                 if (await _repository.GetMessageByIdAsync(message.Id) != null)
                 {
-                    result = CreatedAtAction(
-                        actionName: nameof(MessageController),
+                    result = this.CreatedAtRoute(
+                        routeName: "Default",
                         value: await _repository.ReplaceMessageAsync(
                             new Message()
                             {

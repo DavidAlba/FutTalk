@@ -1,13 +1,30 @@
 version: '3.4'
 
 services:
-  catalog.api:
-    image: ${DOCKER_REGISTRY-}catalogapi
-    build:
-      context: .
-      dockerfile: Catalog.API/Dockerfile
-    depends_on:
-      - sql.data
-
   sql.data:
     image: microsoft/mssql-server-linux:2017-latest
+
+  nosql.data: 
+    image: mongo
+
+  basket.data:
+    image: redis 
+    
+  rabbitmq: 
+    image: rabbitmq:3-management
+
+  catalog.api:
+    image: davidalba/catalogapi:dev
+    build:
+      context: .
+      dockerfile: Catalog.API/Dockerfile    
+    depends_on:
+      - sql.data
+ 
+  webmvc:
+    image: davidalba/webmvc:dev
+    build:
+      context: .
+      dockerfile: WebMVC/Dockerfile
+    depends_on:
+      - catalog.api

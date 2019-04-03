@@ -166,7 +166,7 @@ namespace Catalog.API.Tests
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Returns(Task<Message>.Run(() => default(Message)));
 
             // Act            
-            CreatedAtActionResult model = await controller.CreateMessage(messageCreated) as CreatedAtActionResult;
+            CreatedAtRouteResult model = await controller.CreateMessage(messageCreated) as CreatedAtRouteResult;
 
             // Assert
             mock.Verify(rep => rep.AddMessageAsync(It.IsAny<Message>()), Times.Once);
@@ -305,7 +305,7 @@ namespace Catalog.API.Tests
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
-            CreatedAtActionResult model = await controller.ReplaceMessage(messageReplaced) as CreatedAtActionResult;
+            CreatedAtRouteResult model = await controller.ReplaceMessage(messageReplaced) as CreatedAtRouteResult;
 
             // Assert            
             mock.Verify(rep => rep.ReplaceMessageAsync(It.IsAny<Message>()), Times.Once);

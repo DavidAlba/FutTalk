@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Catalog.API.Infrastructure.Migrations.SqlServerMigrations
 {
@@ -11,8 +10,7 @@ namespace Catalog.API.Infrastructure.Migrations.SqlServerMigrations
                 name: "Message",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Id = table.Column<int>(nullable: false),
                     Name = table.Column<string>(maxLength: 50, nullable: false),
                     Body = table.Column<string>(nullable: true)
                 },

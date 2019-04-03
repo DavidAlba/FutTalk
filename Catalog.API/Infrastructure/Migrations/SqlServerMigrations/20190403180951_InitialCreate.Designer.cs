@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Catalog.API.Infrastructure.Migrations.SqlServerMigrations
 {
     [DbContext(typeof(SqlServerMessagingContext))]
-    [Migration("20190321135820_InitialCreate")]
+    [Migration("20190403180951_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -22,9 +22,7 @@ namespace Catalog.API.Infrastructure.Migrations.SqlServerMigrations
 
             modelBuilder.Entity("Catalog.API.Models.Message", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<int>("Id");
 
                     b.Property<string>("Body");
 

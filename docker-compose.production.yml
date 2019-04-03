@@ -23,7 +23,7 @@ services:
 
   catalog.api:
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionString=Server=sql.data;Initial Catalog=CatalogData;User Id=sa;Password=your@password
     expose: 
       - "80"
@@ -32,7 +32,7 @@ services:
 
   webmvc:
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
     ports:
       - "5100:80"
 

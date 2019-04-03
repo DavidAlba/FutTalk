@@ -20,9 +20,7 @@ namespace Catalog.API.Infrastructure.Migrations.SqlServerMigrations
 
             modelBuilder.Entity("Catalog.API.Models.Message", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                    b.Property<int>("Id");
 
                     b.Property<string>("Body");
 

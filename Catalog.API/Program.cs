@@ -28,7 +28,7 @@ namespace Catalog.API
                 _logger.LogInformation($"Webhost built ({_environment.ApplicationName})!");                
                 _logger.LogInformation($"The environment is ({_environment.EnvironmentName})!");
 
-                if (_environment.IsDevelopment())
+                if (_environment.IsDevelopment() || _environment.IsStaging())
                 {
                     host.MigrateDbContext<SqlServerMessagingContext>((context, services) =>
                     {

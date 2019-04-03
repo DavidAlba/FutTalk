@@ -4,14 +4,14 @@ EXPOSE 80
 
 FROM microsoft/dotnet:2.2-sdk AS build
 WORKDIR /src
-COPY ["WebMVC/WebMVC.csproj", "WebMVC/"]
-RUN dotnet restore "WebMVC/WebMVC.csproj"
+COPY WebMVC/WebMVC.csproj WebMVC/
+RUN dotnet restore WebMVC/WebMVC.csproj
 COPY . .
-WORKDIR "/src/WebMVC"
-RUN dotnet build "WebMVC.csproj" -c Release -o /app
+WORKDIR /src/WebMVC
+RUN dotnet build WebMVC.csproj -c Release -o /app
 
 FROM build AS publish
-RUN dotnet publish "WebMVC.csproj" -c Release -o /app
+RUN dotnet publish WebMVC.csproj -c Release -o /app
 
 FROM base AS final
 WORKDIR /app
