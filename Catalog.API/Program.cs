@@ -1,95 +1,98 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
 using Catalog.API.Infrastructure.DatabaseContexts;
-using Microsoft.AspNetCore;
+using Catalog.API.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Serilog;
 
 namespace Catalog.API
 {
     public class Program
     {
-        public static readonly string Namespace = typeof(Program).Namespace;
-        public static readonly string AppName = Namespace.Substring(Namespace.LastIndexOf('.', Namespace.LastIndexOf('.') - 1) + 1);
+        private static readonly string Namespace = typeof(Program).Namespace;
+        private static readonly string AppName = Namespace.Substring(Namespace.LastIndexOf('.', Namespace.LastIndexOf('.') - 1) + 1);
+        private static IHostingEnvironment _environment;
+        private static ILogger<Program> _logger;
 
         public static int Main(string[] args)
-        {         
+        {
             try
             {
-                IConfiguration configuration = GetConfiguration();
-                Log.Logger = CreateSerilogLogger(configuration);
-
-                Log.Information("Configuring web host ({ApplicationContext})...", AppName);
+                IWebHost  host = BuildWebHost(args);
                 
-                IWebHost host = BuildWebHost(configuration, args);
+                _logger = host.Services.GetService<ILogger<Program>>();
+                _environment = host.Services.GetService<IHostingEnvironment>();
+                _logger.LogInformation($"Webhost built ({_environment.ApplicationName})!");                
+                _logger.LogInformation($"The environment is ({_environment.EnvironmentName})!");
 
-                //Log.Information("Applying migrations ({ApplicationContext})...", AppName);
-                //SqliteMessagingContextDesignFactory messagingContextDesignFactory = new SqliteMessagingContextDesignFactory();
-                //SqliteMessagingContext messagingContext = messagingContextDesignFactory.CreateDbContext(null);
-                //messagingContext.Database.EnsureCreated();
+                if (_environment.IsDevelopment())
+                {
+                    host.MigrateDbContext<SqlServerMessagingContext>((context, services) =>
+                    {
+                        var logger = services.GetService<ILogger<SqlServerMessagingContextSeed>>();
 
-                //SqliteMessagingContextSeed messagingContextSeeder = new SqliteMessagingContextSeed(messagingContext);
-                //messagingContextSeeder.Seed();
+                        // Seeding database
+                        logger.LogInformation($"Seeding database associated with context {typeof(SqlServerMessagingContext).Name}");
+                        SqlServerMessagingContextSeed sqlServerMessagingContextSeed = new SqlServerMessagingContextSeed(context);
+                        sqlServerMessagingContextSeed.SeedAsync().Wait();
+                        logger.LogInformation($"Seeded database associated with context {typeof(SqlServerMessagingContext).Name}");
+                    });
+                }
 
-                Log.Information("Starting web host ({ApplicationContext})...", AppName);
+                _logger?.LogInformation($"Running Webhost ({_environment.ApplicationName})!");
                 host.Run();
 
                 return 0;
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "Program terminated unexpectedly ({ApplicationContext})!", AppName);
+                _logger?.LogCritical(ex, $"Program terminated unexpectedly ({_environment.ApplicationName})!");
                 return 1;
             }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
         }
 
-        //public static IWebHost BuildWebHost(string[] args) =>
-        //    WebHost.CreateDefaultBuilder(args)
-        //        .UseStartup<Startup>()
-        //        .Build();
-
-
-        private static IWebHost BuildWebHost(IConfiguration configuration, string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IWebHost BuildWebHost(string[] args)
+        {
+            return new WebHostBuilder()
                 .CaptureStartupErrors(false)
-                .UseStartup<Startup>()
-                .UseApplicationInsights()
+                //.UseApplicationInsights()
+                .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseConfiguration(configuration)
-                .UseSerilog()
+                .ConfigureAppConfiguration((hostingContext, config) => {
+
+                    var env = hostingContext.HostingEnvironment;
+                    env.ApplicationName = AppName;
+
+                    config.SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
+
+                    if (env.IsDevelopment())
+                    {
+                        var appAssembly = Assembly.Load(new AssemblyName(env.ApplicationName));
+                        if (appAssembly != null)
+                            config.AddUserSecrets(appAssembly, optional: true);
+                    }
+
+                    config.AddEnvironmentVariables();
+                    if (args != null)
+                        config.AddCommandLine(args);
+                })
+                .ConfigureLogging((hostingContext, logging) => {
+
+                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                    logging.AddConsole();
+                    logging.AddDebug();
+                })
+                .UseIISIntegration()
+                .UseDefaultServiceProvider((context, options) => {
+                    options.ValidateScopes = context.HostingEnvironment.IsDevelopment();
+                })
+                .UseStartup<Startup>()                
                 .Build();
-
-        private static Serilog.ILogger CreateSerilogLogger(IConfiguration configuration)
-        {
-            var seqServerUrl = configuration["Serilog:SeqServerUrl"];
-
-            return new LoggerConfiguration()
-                .MinimumLevel.Verbose()
-                .Enrich.WithProperty("ApplicationContext", AppName)
-                .Enrich.FromLogContext()
-                .WriteTo.Console()
-                .WriteTo.Seq(string.IsNullOrWhiteSpace(seqServerUrl) ? "http://seq" : seqServerUrl)
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
-        }
-
-        private static IConfiguration GetConfiguration()
-        {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddEnvironmentVariables();
-
-            return builder.Build();
         }
     }
 }

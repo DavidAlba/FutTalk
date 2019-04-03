@@ -11,14 +11,15 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Catalog.API.Controllers
-{    
+{
     [Route("api/[controller]")]
-    public class MessageController : Controller
+    [ApiController]
+    public class MessageController : ControllerBase
     {
         private IRepository _repository;
 
         public MessageController(IRepository repository)
-        {           
+        {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
 
@@ -82,11 +83,11 @@ namespace Catalog.API.Controllers
             }
             catch (Exception ex)
             {
-                throw new FutTalkException("An error caused an exception", ex);                
+                throw new FutTalkException("An error caused an exception", ex);
             }
         }
 
-        [HttpPost]        
+        [HttpPost]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(Message), (int)HttpStatusCode.Created)]
         public async Task<IActionResult> CreateMessage([FromBody]Message message)
@@ -110,7 +111,7 @@ namespace Catalog.API.Controllers
                                 Body = message?.Body
                             }
                         )
-                    );                    
+                    );
                 }
                 else
                 {
@@ -118,7 +119,7 @@ namespace Catalog.API.Controllers
                 }
 
                 return result;
-            }            
+            }
 
             catch (Exception ex)
             {
@@ -163,7 +164,7 @@ namespace Catalog.API.Controllers
             catch (Exception ex)
             {
                 throw new FutTalkException("An error caused an exception", ex);
-            }            
+            }
         }
 
         [HttpDelete("{id}")]
@@ -190,7 +191,7 @@ namespace Catalog.API.Controllers
                     else
                     {
                         result = NotFound($"The message with {id} was not found");
-                    }                    
+                    }
                 }
 
                 return result;
@@ -214,7 +215,7 @@ namespace Catalog.API.Controllers
             {
                 if (id <= 0) return BadRequest($"The id {id} is not valid. I dmust be greater than zero");
                 if (patch == null) return BadRequest($"The patch argument is not valid");
-                
+
                 message = await _repository.GetMessageByIdAsync(id);
                 if (message != null)
                 {
@@ -225,8 +226,8 @@ namespace Catalog.API.Controllers
                 else
                 {
                     result = NotFound($"The message with id {id} was not found");
-                }             
-                
+                }
+
                 return result;
             }
             catch (Exception ex)

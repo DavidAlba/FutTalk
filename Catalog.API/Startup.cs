@@ -1,51 +1,63 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Catalog.API.Models;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
-using Catalog.API.Infrastructure.DatabaseContexts;
+using Microsoft.Extensions.Logging;
+using Catalog.API.Infrastructure.Extensions;
 
 namespace Catalog.API
 {
     public class Startup
-    {
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+    {        
+        private readonly IConfiguration _configuration;
+        private readonly IHostingEnvironment _environment;
+        private readonly ILogger _logger;
+
+        public Startup(IConfiguration configuration, IHostingEnvironment environment, ILogger<Startup> logger)
+        {
+            _configuration = configuration;
+            _environment = environment;
+            _logger = logger;
+        }
+        
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddDbContext<SqliteMessagingContext>();
-            services.AddSingleton<IRepository, MessagingInMemoryRepository>();
-            services.AddMvc();
-               //.AddXmlDataContractSerializerFormatters()
-               //.AddMvcOptions(opts => {
-               //    opts.FormatterMappings.SetMediaTypeMappingForFormat(
-               //        "xml",
-               //        new MediaTypeHeaderValue("application/xml"));
-               //    opts.RespectBrowserAcceptHeader = true;
-               //    opts.ReturnHttpNotAcceptable = true;
-               //});
-
-            //.AddJsonOptions(options =>
-            // {
-            //     //Revert to PascalCasing for JSON handling
-            //     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
-            // });
-
+            services.AddSwagger(_environment, _logger)
+                .AddContextDatabase(_configuration, _environment, _logger)
+                .AddCustomRepository(_environment, _logger)
+                .AddCustomMVC(_environment, _logger);
         }
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            app.UseStatusCodePages();
-            app.UseDeveloperExceptionPage();
+            var pathBase = _configuration["PATH_BASE"];
+            if (!string.IsNullOrEmpty(pathBase))
+            {
+                _logger.LogDebug("Using PATH BASE '{pathBase}'", pathBase);
+                app.UsePathBase(pathBase);
+            }
+
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseStatusCodePages();
+            }
+
             app.UseStaticFiles();
-            app.UseMvcWithDefaultRoute();
+            app.UseMvc( routes =>
+                {
+                    routes.MapRoute(
+                        name: "Default",
+                        template: "{controller=Home}/{Action=Swagger}");
+                }
+            );
+
+            app.UseCors("CorsPolicy");
+            app.UseSwagger()
+              .UseSwaggerUI(c =>
+              {
+                  c.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", $"{env.ApplicationName} V1");
+              });
         }
     }
 }

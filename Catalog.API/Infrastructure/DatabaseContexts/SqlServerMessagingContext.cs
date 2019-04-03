@@ -26,9 +26,9 @@ namespace Catalog.API.Infrastructure.DatabaseContexts
             var connectionString = "Server=(localdb)\\mssqllocaldb;Database=FutTalk.MessagesDataBase;Trusted_Connection=True;";
             var optionsBuilder = new DbContextOptionsBuilder<SqlServerMessagingContext>()
                 .UseSqlServer(
-                    // Configuring Connection String:
+                    // Configuring Connection String
                     connectionString,
-                    // Configuring Connection Resiliency:
+                    // Configuring Connection Resiliency
                     options => options.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null))
 
                 // Changing default behavior when client evaluation occurs to throw. // Default in EFCore would be to log warning when client evaluation is done.

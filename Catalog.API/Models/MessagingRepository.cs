@@ -9,7 +9,7 @@ namespace Catalog.API.Models
 {
     public class MessagingRepository : IRepository
     {
-        private SqlServerMessagingContext _context = null;
+        protected SqlServerMessagingContext _context = null;
 
         public MessagingRepository(SqlServerMessagingContext context)
         {            
