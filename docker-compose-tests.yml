@@ -1,0 +1,52 @@
+version: '3.4'
+
+services:
+  #rabbitmq-test:
+  #  image: rabbitmq:3-management-alpine
+
+  #redis-data-test:
+  #  image: redis:alpine
+
+  sql-data-test:
+    image: microsoft/mssql-server-linux:2017-latest
+
+  #nosql-data-test:
+  #  image: mongo
+
+
+  catalog-api-test:
+    image: davidalba/catalogapi:dev
+    build:
+      context: .
+      dockerfile: Catalog.API/Dockerfile    
+    depends_on:
+      - sql-data-test
+
+  #catalog-api-test:
+  #  image: ${REGISTRY:-eshop}/catalog-api-test:${TAG:-latest}
+  #  build:
+  #    context: .
+  #    dockerfile: Services/Catalog/Catalog.API/Dockerfile
+  #    target: functionaltest
+  #  depends_on:
+  #    - sql-data-test
+  #    - rabbitmq-test
+  #  volumes: 
+  #    - ${BUILD_ARTIFACTSTAGINGDIRECTORY:-./tests-results/}:/tests
+
+  #catalog-api-unit-test:
+  #  image: ${REGISTRY:-eshop}/catalog-api-test:${TAG:-latest}
+  #  build:
+  #    context: .
+  #    dockerfile: Services/Catalog/Catalog.API/Dockerfile
+  #   target: unittest
+  #  depends_on:
+  #    - sql-data-test
+  #    - rabbitmq-test
+  #  volumes: 
+  #    - ${BUILD_ARTIFACTSTAGINGDIRECTORY:-./tests-results/}:/tests
+  #    - nosql-data-test
+  #    - identity-api-test
+  #    - rabbitmq-test
+  #  volumes: 
+  #    - ${BUILD_ARTIFACTSTAGINGDIRECTORY:-./tests-results/}:/tests

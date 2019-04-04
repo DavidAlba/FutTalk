@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Catalog.API", "Catalog.API\Catalog.API.csproj", "{02C50B22-6D39-4CA2-8D37-71265B3ADD46}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Catalog.API.Tests", "Catalog.API.Tests\Catalog.API.Tests.csproj", "{95EEFF98-E38C-47B5-845C-FB8ABF17E705}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Catalog.API.UnitTests", "Catalog.API.Tests\Catalog.API.UnitTests.csproj", "{95EEFF98-E38C-47B5-845C-FB8ABF17E705}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{A856A4D9-81C5-4EE1-9644-EE9A4BBCC312}"
 EndProject
@@ -13,7 +13,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web Apps", "Web Apps", "{D5
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{65BE4368-ED43-48A7-A21B-3AE318D13D67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebMVC", "WebMVC\WebMVC.csproj", "{E6A445C2-14E7-4CE7-B3BF-D5D1F80DA038}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebMVC", "WebMVC\WebMVC.csproj", "{E6A445C2-14E7-4CE7-B3BF-D5D1F80DA038}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catalog.API.FunctionalTests", "..\Catalog.API.FunctionalTests\Catalog.API.FunctionalTests.csproj", "{410DA938-CB5B-4955-85CE-DCB1D656CA01}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +39,10 @@ Global
 		{E6A445C2-14E7-4CE7-B3BF-D5D1F80DA038}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6A445C2-14E7-4CE7-B3BF-D5D1F80DA038}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6A445C2-14E7-4CE7-B3BF-D5D1F80DA038}.Release|Any CPU.Build.0 = Release|Any CPU
+		{410DA938-CB5B-4955-85CE-DCB1D656CA01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{410DA938-CB5B-4955-85CE-DCB1D656CA01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{410DA938-CB5B-4955-85CE-DCB1D656CA01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{410DA938-CB5B-4955-85CE-DCB1D656CA01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -45,6 +51,7 @@ Global
 		{02C50B22-6D39-4CA2-8D37-71265B3ADD46} = {A856A4D9-81C5-4EE1-9644-EE9A4BBCC312}
 		{95EEFF98-E38C-47B5-845C-FB8ABF17E705} = {A856A4D9-81C5-4EE1-9644-EE9A4BBCC312}
 		{E6A445C2-14E7-4CE7-B3BF-D5D1F80DA038} = {D5AA23A1-7726-4C08-9D5D-F525371526E1}
+		{410DA938-CB5B-4955-85CE-DCB1D656CA01} = {A856A4D9-81C5-4EE1-9644-EE9A4BBCC312}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CE88C14F-BA90-425F-BBC1-8786F3616929}

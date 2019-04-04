@@ -12,7 +12,7 @@ services:
     ports: 
     - "27017:27017"
 
-  basket.data:
+  redis.data:
     ports: 
     - "6379:6379"
     

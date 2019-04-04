@@ -12,7 +12,7 @@ services:
     ports: 
     - "27017:27017"
 
-  basket.data:
+  redis.data:
     ports: 
     - "6379:6379"
     
@@ -24,15 +24,13 @@ services:
   catalog.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionString=Server=sql.data;Initial Catalog=CatalogData;User Id=sa;Password=your@password
-    expose: 
-      - "80"
+      - ConnectionString=Server=sql.data;Initial Catalog=CatalogData;User Id=sa;Password=your@password   
     ports:
-      - "5101:80"
+      - "80:80"
 
   webmvc:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
     ports:
-      - "5100:80"
+      - "80:80"
 

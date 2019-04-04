@@ -14,7 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Catalog.API.Tests
+namespace Catalog.API.UnitTests
 {
     public class MessageControllerTests
     {

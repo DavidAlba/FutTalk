@@ -1,0 +1,55 @@
+version: '3.4'
+
+services:
+  #rabbitmq-test:
+  #  ports:
+  #    - "15672:15672"
+  #    - "5672:5672" 
+
+  sql-data-test:
+    environment:
+      - SA_PASSWORD=yourPass@word
+      - ACCEPT_EULA=Y
+    ports:
+      - "5433:1433"
+
+  #nosql-data-test:
+  #  ports:
+  #    - "27017:27017"
+
+  #redis-data-test:
+  #  ports:
+  #    - "6379:6379"
+
+  catalog-api-test:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Staging
+      - ConnectionString=Server=sql.data;Initial Catalog=CatalogData;User Id=sa;Password=your@password
+    expose: 
+      - "80"
+    ports:
+      - "5201:80"
+
+  #catalog-api-test:
+  #  environment:
+  #    - ASPNETCORE_ENVIRONMENT=Test     
+  #  ports:
+      - "5101:80"
+  #  entrypoint:
+  #      - dotnet
+  #      - test
+  #      - --logger
+  #      - trx;LogFileName=/tests/catalog-test-results.xml
+
+  #catalog-api-unit-test:
+  #  environment:
+  #    - ASPNETCORE_ENVIRONMENT=Test
+  #    - ConnectionString=Server=sql.data;Initial Catalog=CatalogData;User Id=sa;Password=your@password
+  #   ports:
+  #    - "5191:80"
+  #  entrypoint:
+  #      - dotnet
+  #      - test
+  #      - --logger
+  #      - trx;LogFileName=/tests/catalog-unit-test-results.xml
+

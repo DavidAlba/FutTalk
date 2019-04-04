@@ -7,7 +7,7 @@ services:
   nosql.data: 
     image: mongo
 
-  basket.data:
+  redis.data:
     image: redis 
     
   rabbitmq: 

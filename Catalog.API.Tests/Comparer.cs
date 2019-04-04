@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Catalog.API.Tests
+namespace Catalog.API.UnitTests
 {
     public class Comparer
     {

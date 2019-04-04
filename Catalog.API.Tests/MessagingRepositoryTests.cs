@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-namespace Catalog.API.Tests
+namespace Catalog.API.UnitTests
 {
     public class MessagingContextTests : IDisposable
     {
