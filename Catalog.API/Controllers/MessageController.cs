@@ -24,23 +24,34 @@ namespace Catalog.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<Message>), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(IEnumerable<Message>), (int)HttpStatusCode.NoContent)]
-        public async Task<IActionResult> GetAllMessages()
+        [ProducesResponseType(typeof(SegmentedItems<Message>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NoContent)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> GetAllMessages(int size = 5, int index = 1)
         {
             IActionResult result = null;
             IEnumerable<Message> messages = null;
+            int count = 0;
+
+            if (index < 1) return BadRequest($"The index {index} must be greater than zero");
 
             try
             {
-                messages = await _repository.GetAllMessagesAsync();
-                if (messages?.Count() == 0)
+                messages = await _repository.GetAllMessagesAsync(size, index);
+                count = messages?.Count() ?? 0;
+                if (count  == 0)
                 {
                     result = NoContent();
                 }
                 else
                 {
-                    result = Ok(messages);
+                    result = Ok(
+                        new SegmentedItems<Message>(
+                            count: await _repository.LongCountAsync(),
+                            index: index,
+                            size: size,
+                            items: messages)
+                        );
                 }
 
                 return result;

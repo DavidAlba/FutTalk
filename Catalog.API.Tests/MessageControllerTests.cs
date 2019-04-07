@@ -4,6 +4,7 @@ using Catalog.API.Infrastructure.Exceptions;
 using Catalog.API.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace Catalog.API.UnitTests
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetAllMessagesAsync()).Throws<FutTalkException>();
+            mock.SetupSequence(rep => rep.GetAllMessagesAsync(It.IsAny<int>(), It.IsAny<int>())).Throws<FutTalkException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert            
@@ -37,7 +38,7 @@ namespace Catalog.API.UnitTests
             // Arrange
             IEnumerable<Message> emptyList = new List<Message>().AsEnumerable<Message>();
             var mock = new Mock<IRepository>();            
-            mock.SetupSequence(rep => rep.GetAllMessagesAsync())
+            mock.SetupSequence(rep => rep.GetAllMessagesAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .Returns(Task<IEnumerable<Message>>.Run(() => emptyList));
             MessageController controller = new MessageController(mock.Object);
 
@@ -48,22 +49,104 @@ namespace Catalog.API.UnitTests
             Assert.Equal((int?)HttpStatusCode.NoContent, model.StatusCode);
         }
 
+        [Fact]
+        public async void GetAllMessagesBadRequest()
+        {
+            // Arrange
+            int index = 0, size = 3;
+            var mock = new Mock<IRepository>();
+            MessageController controller = new MessageController(mock.Object);
+
+            // Act
+            BadRequestObjectResult result = await controller.GetAllMessages(index: index, size: size) as BadRequestObjectResult;
+
+            // Assert
+            Assert.Equal((int?)HttpStatusCode.BadRequest, result.StatusCode);
+        }
+
         [Theory]
         [ClassData(typeof(MessagesTestData))]
         public async void GetAllMessagesOk(Message[] messages)
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetAllMessagesAsync())
+            mock.SetupSequence(rep => rep.GetAllMessagesAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .Returns(() => Task<IEnumerable<Message>>.Run(() => messages.AsEnumerable<Message>()));
             MessageController controller = new MessageController(mock.Object);
 
             // Act
-            OkObjectResult model = await controller.GetAllMessages() as OkObjectResult;
+            OkObjectResult result = await controller.GetAllMessages() as OkObjectResult;
+            SegmentedItems<Message> model = result?.Value as SegmentedItems<Message>;
 
             // Assert
-            Assert.Equal((int?)HttpStatusCode.OK, model.StatusCode);
-            Assert.Equal(messages, (IEnumerable<Message>)model.Value, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal((int?)HttpStatusCode.OK, result.StatusCode);
+            Assert.Equal(messages, model.Items, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+        }
+
+        [Theory]
+        [ClassData(typeof(MessagesTestData))]
+        public async void GetSegmentedMessagesOk(Message[] messages)
+        {
+            // Arrange
+            var mock = new Mock<IRepository>();
+            int size = 2, index = 2;
+            mock.Setup(rep => rep.GetAllMessagesAsync(size, index))
+                .Returns(() => Task<IEnumerable<Message>>.Run(() =>
+                {
+                    List<Message> ls = new List<Message>();
+                    ls.Add(messages[2]);
+                    ls.Add(messages[3]);
+
+                    return ls.AsEnumerable<Message>();
+                }));
+            mock.Setup(rep => rep.LongCountAsync()).Returns(() => Task<long>.Run(() => 2L));
+            MessageController controller = new MessageController(mock.Object);
+
+            // Act
+            OkObjectResult result = 
+                await controller.GetAllMessages(
+                    size: size,
+                    index: index) as OkObjectResult;
+            SegmentedItems<Message> model = result?.Value as SegmentedItems<Message>;
+
+            // Assert
+            Assert.Equal((int?)HttpStatusCode.OK, result?.StatusCode);
+            Assert.True(model?.Count == 2);
+            Assert.Equal(messages[2], model?.Items?.ToArray<Message>()[0], Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages[3], model?.Items?.ToArray<Message>()[1], Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+        }
+
+        [Theory]
+        [ClassData(typeof(MessagesTestData))]
+        public async void GetSegmentedInformation(Message[] messages)
+        {
+            // Arrange
+            var mock = new Mock<IRepository>();
+            int size = 3, index = 2;
+            mock.Setup(rep => rep.GetAllMessagesAsync(size, index))
+                .Returns(() => Task<IEnumerable<Message>>.Run(() =>
+                {
+                    List<Message> ls = new List<Message>();
+                    ls.Add(messages[2]);
+                    ls.Add(messages[3]);
+
+                    return ls.AsEnumerable<Message>();
+                }));
+
+            mock.Setup(rep => rep.LongCountAsync()).Returns(Task<Message>.Run(() => messages.LongCount()));
+            MessageController controller = new MessageController(mock.Object);
+
+            // Act
+            OkObjectResult result =
+                await controller.GetAllMessages(
+                    size: size,
+                    index: index) as OkObjectResult;
+            SegmentedItems<Message> model = result?.Value as SegmentedItems<Message>;
+
+            // Assert            
+            Assert.Equal(messages.LongCount(), model?.Count);
+            Assert.Equal(index, model?.Index);
+            Assert.Equal(size, model?.Size);
         }
 
         [Fact]
@@ -103,7 +186,7 @@ namespace Catalog.API.UnitTests
         {
             // Arrange
             var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetAllMessagesAsync())
+            mock.SetupSequence(rep => rep.GetAllMessagesAsync(5, 0))
                 .Returns(Task<IEnumerable<Message>>.Run(() => messages.AsEnumerable<Message>()));            
             MessageController controller = new MessageController(mock.Object);
 

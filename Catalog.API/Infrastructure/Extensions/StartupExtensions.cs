@@ -17,9 +17,9 @@ namespace Catalog.API.Infrastructure.Extensions
 {
     public static class StartupExtensions
     {
-        public static IServiceCollection AddContextDatabase(this IServiceCollection services, IConfiguration configuration, IHostingEnvironment environment, ILogger logger)
+        public static IServiceCollection AddCustomContextDatabase(this IServiceCollection services, IConfiguration configuration, IHostingEnvironment environment, ILogger logger)
         {
-            logger.LogInformation("Configuring database({ApplicationContext})...", environment.ApplicationName);
+            logger.LogInformation($"Configuring database({environment.ApplicationName})...");
 
             if (environment.IsDevelopment())
             {
@@ -57,7 +57,7 @@ namespace Catalog.API.Infrastructure.Extensions
 
         public static IServiceCollection AddCustomRepository(this IServiceCollection services, IHostingEnvironment environment, ILogger logger)
         {
-            logger.LogInformation("Registering IRepository dependency injection ({ApplicationContext})...", environment.ApplicationName);
+            logger.LogInformation($"Registering {nameof(IRepository)} dependency injection ({environment.ApplicationName})...");
 
             if (environment.IsDevelopment())
             {
@@ -76,7 +76,7 @@ namespace Catalog.API.Infrastructure.Extensions
         public static IServiceCollection AddCustomMVC(this IServiceCollection services, IHostingEnvironment environment, ILogger logger)
         {
 
-            logger.LogInformation("Adding Custom MVC ({ApplicationContext})...", environment.ApplicationName);
+            logger.LogInformation($"Adding Custom MVC ({environment.ApplicationName})...");
 
             services.AddMvc(options =>
             {
@@ -103,9 +103,9 @@ namespace Catalog.API.Infrastructure.Extensions
             return services;
         }
 
-        public static IServiceCollection AddSwagger(this IServiceCollection services, IHostingEnvironment environment, ILogger logger)
+        public static IServiceCollection AddCustomSwagger(this IServiceCollection services, IHostingEnvironment environment, ILogger logger)
         {
-            logger.LogInformation("Adding Swagger ({ApplicationContext})...", environment.ApplicationName);
+            logger.LogInformation($"Adding Swagger ({environment.ApplicationName})...");
             services.AddSwaggerGen(options =>
             {
                 options.DescribeAllEnumsAsStrings();

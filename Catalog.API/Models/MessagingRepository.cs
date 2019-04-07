@@ -15,16 +15,36 @@ namespace Catalog.API.Models
         {            
             _context = context ?? throw new ArgumentNullException(nameof(context));
             ((DbContext)context).ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.TrackAll;
-        }       
-
-        public IEnumerable<Message> GetAllMessages()
-        {
-            return GetAllMessagesAsync()?.Result;
         }
 
-        public async Task<IEnumerable<Message>> GetAllMessagesAsync()
+        public long LongCount()
         {
-            return await _context.Messages.AsQueryable<Message>().ToListAsync();
+            return LongCountAsync().Result;
+        }
+
+        public Task<long> LongCountAsync()
+        {
+            return Task<long>.Run(() => _context.Messages.LongCountAsync<Message>());
+        }
+
+        public IEnumerable<Message> GetAllMessages(int size, int index)
+        {
+            return GetAllMessagesAsync(size, index)?.Result;
+        }
+
+        public async Task<IEnumerable<Message>> GetAllMessagesAsync(int size, int index)
+        {
+            if (size < 1) return new List<Message>().AsEnumerable<Message>(); // Empty list
+            if (index < 1) return new List<Message>().AsEnumerable<Message>(); // Empty list
+
+            long count = await LongCountAsync();
+            if (size > count) size = (int)count;
+
+            return await _context.Messages.AsQueryable<Message>()
+                .OrderBy(m => m.Id)
+                .Skip((index - 1) * size)
+                .Take(size)
+                .ToListAsync();
         }
 
         public Message AddMessage(Message message) => AddMessageAsync(message)?.Result;

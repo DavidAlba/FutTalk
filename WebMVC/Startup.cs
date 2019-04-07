@@ -1,33 +1,76 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using WebMVC.Infrastructure.Extensions;
 
 namespace WebMVC
 {
     public class Startup
     {
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-        public void ConfigureServices(IServiceCollection services)
+        private readonly IConfiguration _configuration;
+        private readonly IHostingEnvironment _environment;
+        private readonly ILogger _logger;
+
+        public Startup(IConfiguration configuration, IHostingEnvironment environment, ILogger<Startup> logger)
         {
+            _configuration = configuration;
+            _environment = environment;
+            _logger = logger;
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddCustomHttpClientServices(_configuration, _environment, _logger)
+                .AddCustomMVC(_configuration, _environment, _logger);
+        }
+        
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseStatusCodePages();
             }
+            
+            app.UseStaticFiles();
+            app.UseMvc(routes => {
 
-            app.Run(async (context) =>
-            {
-                await context.Response.WriteAsync("Hello World!");
+                // Shows the specified page of items from the specified category
+                routes.MapRoute(
+                    name: null,
+                    template: "{category}/Page{page:int}",
+                    defaults: new { controller = "Message", action = "List" }
+                );
+
+                // Shows the first page of items from a specific category
+                routes.MapRoute(
+                    name: null,
+                    template: "Page{page:int}",
+                    defaults: new { controller = "Message", action = "List", page = 1 }
+                );
+
+
+                // Lists the specified page, showing items from all categories
+                routes.MapRoute(
+                    name: null,
+                    template: "{category}",
+                    defaults: new { controller = "Message", action = "List", page = 1 }
+                );
+
+                // Lists the first page of messages from all categories
+                routes.MapRoute(
+                    name: null,
+                    template: "",
+                    defaults: new { controller = "Message", action = "List", page = 1}
+                );
+
+                // Default route
+                routes.MapRoute(
+                    name: "default",
+                    template: "{controller=Message}/{action=List}/{id?}"
+                );
             });
         }
     }

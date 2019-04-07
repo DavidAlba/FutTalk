@@ -22,8 +22,8 @@ namespace Catalog.API
         
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSwagger(_environment, _logger)
-                .AddContextDatabase(_configuration, _environment, _logger)
+            services.AddCustomSwagger(_environment, _logger)
+                .AddCustomContextDatabase(_configuration, _environment, _logger)
                 .AddCustomRepository(_environment, _logger)
                 .AddCustomMVC(_environment, _logger);
         }

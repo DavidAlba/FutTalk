@@ -5,8 +5,10 @@ namespace Catalog.API.Models
 {  
     public interface IRepository
     {       
-        IEnumerable<Message> GetAllMessages();
-        Task<IEnumerable<Message>> GetAllMessagesAsync();
+        IEnumerable<Message> GetAllMessages(int size = 5, int index = 0);
+        Task<IEnumerable<Message>> GetAllMessagesAsync(int size = 5, int index = 0);
+        long LongCount();
+        Task<long> LongCountAsync();
         Message GetMessageById(int id);
         Task<Message> GetMessageByIdAsync(int id);
         Message AddMessage(Message message);

@@ -9,13 +9,13 @@ using Xunit;
 
 namespace Catalog.API.UnitTests
 {
-    public class MessagingContextTests : IDisposable
+    public class MessageRepositoryTests : IDisposable
     {
         public SqliteConnection Connection { get; private set; }
         public SqlServerMessagingContext Context { get; private set; }
         public IRepository Repository { get; private set; }
 
-        public MessagingContextTests()
+        public MessageRepositoryTests()
         {
             Connection = new SqliteConnection("DataSource =:memory: ");
             Connection.Open();
@@ -431,6 +431,41 @@ namespace Catalog.API.UnitTests
 
         [Theory]
         [ClassData(typeof(MessagesTestData))]
+        public void GetLongCountOk(Message[] messages)
+        {
+            // Arrange
+            foreach (Message message in messages)
+                Repository.AddMessage(
+                    new Message
+                    {
+                        Id = message.Id,
+                        Name = message.Name,
+                        Body = message.Body
+                    }
+            );
+
+            // Act
+            long longCount = Repository.LongCount();
+
+            // Assert            
+            Assert.Equal(messages.LongCount<Message>(), longCount);
+        }
+
+        [Fact]
+        public void GetLongCountBadRequest()
+        {
+            // Arrange
+            // Empty repository
+
+            // Act
+            long longCount = Repository.LongCount();
+
+            // Assert            
+            Assert.Equal(0L, longCount);
+        }
+
+        [Theory]
+        [ClassData(typeof(MessagesTestData))]
         public void GetAllMessagesOk(Message[] messages)
         {
             // Arrange
@@ -449,6 +484,105 @@ namespace Catalog.API.UnitTests
 
             // Assert            
             Assert.Equal(messages, messagesFromRepository, Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+        }
+
+        [Theory]
+        [ClassData(typeof(MessagesTestData))]
+        public void GetAllMessagesBadRequestIndexGreaterThanTotalItems(Message[] messages)
+        {
+            // Arrange
+            foreach (Message message in messages)
+                Repository.AddMessage(
+                    new Message
+                    {
+                        Id = message.Id,
+                        Name = message.Name,
+                        Body = message.Body
+                    }
+            );
+
+            int index = 5, size = 2;
+
+            // Act
+            IEnumerable<Message> messagesFromRepository = Repository.GetAllMessages(index, size);
+
+            // Assert            
+            Assert.True(messagesFromRepository.Count() == 0);
+        }
+
+        [Theory]
+        [ClassData(typeof(MessagesTestData))]
+        public void GetAllMessagesBadRequestIndexLessThanOne(Message[] messages)
+        {
+            // Arrange
+            foreach (Message message in messages)
+                Repository.AddMessage(
+                    new Message
+                    {
+                        Id = message.Id,
+                        Name = message.Name,
+                        Body = message.Body
+                    }
+            );
+
+            int index = 0, size = 2;
+
+            // Act
+            IEnumerable<Message> messagesFromRepository = Repository.GetAllMessages(index, size);
+
+            // Assert            
+            Assert.True(messagesFromRepository.Count() == 0);
+        }
+
+        [Theory]
+        [ClassData(typeof(MessagesTestData))]
+        public void GetAllMessagesBadRequestSizeLessThanOne(Message[] messages)
+        {
+            // Arrange
+            foreach (Message message in messages)
+                Repository.AddMessage(
+                    new Message
+                    {
+                        Id = message.Id,
+                        Name = message.Name,
+                        Body = message.Body
+                    }
+            );
+
+            int index = 1, size = 0;
+
+            // Act
+            IEnumerable<Message> messagesFromRepository = Repository.GetAllMessages(size: size, index: index);
+
+            // Assert            
+            Assert.True(messagesFromRepository.Count() == 0);
+        }
+
+        [Theory]
+        [ClassData(typeof(MessagesTestData))]
+        public void GetAllSegmentedMessageseOk(Message[] messages)
+        {
+            // Arrange
+            foreach (Message message in messages)
+                Repository.AddMessage(
+                    new Message
+                    {
+                        Id = message.Id,
+                        Name = message.Name,
+                        Body = message.Body
+                    }
+            );
+
+            // Act
+            IEnumerable<Message> messagesFromRepository = 
+                Repository.GetAllMessages(
+                    size: 3,
+                    index: 1);
+
+            // Assert
+            Assert.True(messagesFromRepository.Count() == 2);
+            Assert.Equal(messages[3], messagesFromRepository.ToArray<Message>()[0], Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages[4], messagesFromRepository.ToArray<Message>()[1], Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
         }
 
         [Fact]

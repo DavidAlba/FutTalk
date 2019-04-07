@@ -11,9 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace Catalog.API
 {
     public class Program
-    {
-        private static readonly string Namespace = typeof(Program).Namespace;
-        private static readonly string AppName = Namespace.Substring(Namespace.LastIndexOf('.', Namespace.LastIndexOf('.') - 1) + 1);
+    {       
         private static IHostingEnvironment _environment;
         private static ILogger<Program> _logger;
 
@@ -42,7 +40,7 @@ namespace Catalog.API
                     });
                 }
 
-                _logger?.LogInformation($"Running Webhost ({_environment.ApplicationName})!");
+                _logger.LogInformation($"Running Webhost ({_environment.ApplicationName})!");
                 host.Run();
 
                 return 0;
@@ -64,8 +62,6 @@ namespace Catalog.API
                 .ConfigureAppConfiguration((hostingContext, config) => {
 
                     var env = hostingContext.HostingEnvironment;
-                    env.ApplicationName = AppName;
-
                     config.SetBasePath(Directory.GetCurrentDirectory())
                         .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                         .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);

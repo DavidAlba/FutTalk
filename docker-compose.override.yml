@@ -5,21 +5,21 @@ services:
     environment:
       - SA_PASSWORD=your@password
       - ACCEPT_EULA=Y
-    ports: 
-      - "5433:1433"
+    ports:
+      - "5433:1433"  # Important: In a production environment your should remove the external port
 
   nosql.data:
     ports: 
-    - "27017:27017"
+    - "27017:27017"  # Important: In a production environment your should remove the external port
 
   redis.data:
     ports: 
-    - "6379:6379"
+    - "6379:6379"    # Important: In a production environment your should remove the external port
     
   rabbitmq:
     ports: 
-    - "15672:15672" 
-    - "5672:5672"
+    - "15672:15672"  # Important: In a production environment your should remove the external port
+    - "5672:5672"    # Important: In a production environment your should remove the external port
 
   catalog.api:
     environment:
@@ -28,11 +28,11 @@ services:
     expose: 
       - "80"
     ports:
-      - "5101:80"
+      - "5101:80"  # Important: In a production environment your should remove the external port
 
   webmvc:
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Staging
     ports:
-      - "5100:80"
+      - "5100:80"  # Important: In a production environment your should remove the external port
 
