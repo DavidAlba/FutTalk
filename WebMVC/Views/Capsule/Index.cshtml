@@ -1,0 +1,47 @@
+﻿@{
+    Layout = "_MessageLayout";
+}
+
+@model CapsuleIndexViewModel
+
+<h2>Your Capsule</h2>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th class="text-right">Body</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var message in Model.Capsule.Messages)
+        {
+            <tr>
+                <td class="text-left">@message.Id</td>
+                <td class="text-left">@message.Name</td>
+                <td class="text-left">@message.Body</td>
+                <td>
+                    <form asp-action="RemoveFromCapsule" method="post">
+                        <input type="hidden" name="messageId"
+                               value="@message.Id" />
+                        <input type="hidden" name="returnUrl"
+                               value="@Model.ReturnUrl" />
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            Remove
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" class="text-right"></td>
+            <td class="text-right"></td>
+        </tr>
+    </tfoot>
+</table>
+<div class="text-center">
+    <a class="btn btn-primary" href="@Model.ReturnUrl">Continue</a>
+    <a class="btn btn-primary" asp-action="Index" asp-controller="Delivery">Send</a>
+</div>

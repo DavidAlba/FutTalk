@@ -1,0 +1,27 @@
+﻿@{
+    Layout = "_MessageLayout";
+}
+
+@model Delivery
+<h2>Send it now</h2>
+<p>Please enter your details, and we'll deliver your capsule when you say and to whom you say just in time!</p>
+<div asp-validation-summary="All" class="text-danger"></div>
+<form asp-action="SendCapsule" method="post">
+    <h3>Whom to</h3>
+    <div class="form-group">
+        <label>User Name:</label><input asp-for="ToWhom" class="form-control" />
+    </div>
+    <h3>When</h3>
+    <div class="form-group">
+        <label>When:</label><input asp-for="When" class="form-control" />
+    </div>
+    <h3>Options</h3>
+    <div class="checkbox">
+        <label>
+            <input asp-for="GiftWrap" /> Gift wrap these items
+        </label>
+    </div>
+    <div class="text-center">
+        <input class="btn btn-primary" type="submit" value="SendCapsule" />
+    </div>
+</form>
