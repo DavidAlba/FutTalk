@@ -1,0 +1,15 @@
+﻿@model Capsule
+<div class="">
+    @if (Model.Messages.Count() > 0)
+    {
+    <small class="navbar-text">
+        <b>Your Capsule:</b>
+        @Model.Messages.Count() message(s)
+    </small>
+    }
+    <a class="btn btn-sm btn-secondary navbar-btn"
+       asp-controller="Capsule" asp-action="Index"
+       asp-route-returnurl="@ViewContext.HttpContext.Request.PathAndQuery()">
+        <i class="fas fa-capsules"></i>
+    </a>
+</div>
