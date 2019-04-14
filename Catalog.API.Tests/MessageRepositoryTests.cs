@@ -13,7 +13,7 @@ namespace Catalog.API.UnitTests
     {
         public SqliteConnection Connection { get; private set; }
         public SqlServerMessagingContext Context { get; private set; }
-        public IRepository Repository { get; private set; }
+        public IMessageRepository Repository { get; private set; }
 
         public MessageRepositoryTests()
         {
@@ -576,13 +576,13 @@ namespace Catalog.API.UnitTests
             // Act
             IEnumerable<Message> messagesFromRepository = 
                 Repository.GetAllMessages(
-                    size: 3,
-                    index: 1);
+                    size: 2,
+                    index: 2);
 
             // Assert
             Assert.True(messagesFromRepository.Count() == 2);
-            Assert.Equal(messages[3], messagesFromRepository.ToArray<Message>()[0], Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
-            Assert.Equal(messages[4], messagesFromRepository.ToArray<Message>()[1], Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages[2], messagesFromRepository.ToArray<Message>()[0], Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
+            Assert.Equal(messages[3], messagesFromRepository.ToArray<Message>()[1], Comparer.Get<Message>((m1, m2) => m1.Id == m2.Id));
         }
 
         [Fact]

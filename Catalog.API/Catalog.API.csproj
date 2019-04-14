@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\**" />
+    <Content Remove="wwwroot\**" />
+    <EmbeddedResource Remove="wwwroot\**" />
+    <None Remove="wwwroot\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="Infrastructure\Migrations\SqliteMigrations\20190321141541_InitialCreate.cs" />
     <Compile Remove="Infrastructure\Migrations\SqlServerMigrations\20190403084848_InitialCreate.cs" />
     <Compile Remove="Infrastructure\Migrations\SqlServerMigrations\20190403180147_InitialCreate.cs" />
@@ -21,7 +28,6 @@
 
   <ItemGroup>
     <Folder Include="Infrastructure\Migrations\SqliteMigrations\" />
-    <Folder Include="wwwroot\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -16,9 +16,9 @@ namespace Catalog.API.Controllers
     [ApiController]
     public class MessageController : ControllerBase
     {
-        private IRepository _repository;
+        private IMessageRepository _repository;
 
-        public MessageController(IRepository repository)
+        public MessageController(IMessageRepository repository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
@@ -58,7 +58,7 @@ namespace Catalog.API.Controllers
             }
             catch (Exception ex)
             {
-                throw new FutTalkException("An error caused an exception", ex);
+                throw new MessagesDomainException("An error caused an exception", ex);
             }
         }
 
@@ -94,7 +94,7 @@ namespace Catalog.API.Controllers
             }
             catch (Exception ex)
             {
-                throw new FutTalkException("An error caused an exception", ex);
+                throw new MessagesDomainException("An error caused an exception", ex);
             }
         }
 
@@ -114,7 +114,7 @@ namespace Catalog.API.Controllers
                 {
                     result = this.CreatedAtRoute(
                         routeName: "Default",                        
-                        value: _repository.AddMessageAsync(
+                        value: await _repository.AddMessageAsync(
                             new Message()
                             {
                                 Id = message.Id,
@@ -131,10 +131,9 @@ namespace Catalog.API.Controllers
 
                 return result;
             }
-
             catch (Exception ex)
             {
-                throw new FutTalkException("An error caused an exception", ex);
+                throw new MessagesDomainException("An error caused an exception", ex);
             }
         }
 
@@ -174,7 +173,7 @@ namespace Catalog.API.Controllers
 
             catch (Exception ex)
             {
-                throw new FutTalkException("An error caused an exception", ex);
+                throw new MessagesDomainException("An error caused an exception", ex);
             }
         }
 
@@ -209,7 +208,7 @@ namespace Catalog.API.Controllers
             }
             catch (Exception ex)
             {
-                throw new FutTalkException("An error caused an exception", ex);
+                throw new MessagesDomainException("An error caused an exception", ex);
             }
         }
 
@@ -243,7 +242,7 @@ namespace Catalog.API.Controllers
             }
             catch (Exception ex)
             {
-                throw new FutTalkException("An error caused an exception", ex);
+                throw new MessagesDomainException("An error caused an exception", ex);
             }
         }
     }

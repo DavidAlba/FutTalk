@@ -9,8 +9,10 @@ namespace WebMVC.Infrastructure.Services
 {
     public interface IMessageService
     {
-        PagingInfo<Message> GetAllMessages(string category, int size = 5, int index = 1);
-        Task<PagingInfo<Message>> GetAllMessagesAsync(string category, int size = 5, int index = 1);
+        IEnumerable<Message> GetAllMessages();
+        Task<IEnumerable<Message>> GetAllMessagesAsync();
+        PagingInfo<Message> GetAllPaginatedMessages(string category, int size = int.MaxValue, int index = 1);
+        Task<PagingInfo<Message>> GetAllPaginatedMessagesAsync(string category, int size = int.MaxValue, int index = 1);
         Message GetMessageById(int id);
         Task<Message> GetMessageByIdAsync(int id);
         Message AddMessage(Message message);

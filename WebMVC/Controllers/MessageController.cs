@@ -12,14 +12,15 @@ namespace WebMVC.Controllers
 {
     public class MessageController : Controller
     {
-        private IMessageService _service;
+        private IMessageService _messageService;
         public int PageSize = 2;
 
-        public MessageController(IMessageService service) => _service = service;
+        public MessageController(IMessageService messageService) 
+            => _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
 
-        public async Task<IActionResult> List(string category, int page = 1)
+        public async Task<IActionResult> Index(string category, int page = 1)
         {
-            var pagingInfo = await _service.GetAllMessagesAsync(
+            var pagingInfo = await _messageService.GetAllPaginatedMessagesAsync(
                 category: category,
                 size: PageSize, 
                 index: page);
@@ -31,7 +32,6 @@ namespace WebMVC.Controllers
                     PagingInfo = pagingInfo,
                     CurrentCategory = category
                 });
-        }
-            
+        }            
     }
 }

@@ -22,7 +22,7 @@ namespace WebMVC
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCustomHttpClientServices(_configuration, _environment, _logger)
+            services.AddCustomServices(_configuration, _environment, _logger)
                 .AddCustomMVC(_configuration, _environment, _logger);
         }
         
@@ -32,44 +32,45 @@ namespace WebMVC
             {
                 app.UseDeveloperExceptionPage();
                 app.UseStatusCodePages();
+                app.UseSession();
             }
             
-            app.UseStaticFiles();
+            app.UseStaticFiles();            
             app.UseMvc(routes => {
 
                 // Shows the specified page of items from the specified category
                 routes.MapRoute(
                     name: null,
-                    template: "{category}/Page{page:int}",
-                    defaults: new { controller = "Message", action = "List" }
+                    template: "{controller=Message}/{category}/Page{page:int}",
+                    defaults: new { action = "Index" }
                 );
 
                 // Shows the first page of items from a specific category
                 routes.MapRoute(
                     name: null,
-                    template: "Page{page:int}",
-                    defaults: new { controller = "Message", action = "List", page = 1 }
+                    template: "{controller=Message}/Page{page:int}",
+                    defaults: new { action = "Index", page = 1 }
                 );
 
 
                 // Lists the specified page, showing items from all categories
                 routes.MapRoute(
                     name: null,
-                    template: "{category}",
-                    defaults: new { controller = "Message", action = "List", page = 1 }
+                    template: "{controller=Message}/{category}",
+                    defaults: new { action = "Index", page = 1 }
                 );
 
                 // Lists the first page of messages from all categories
                 routes.MapRoute(
                     name: null,
-                    template: "",
-                    defaults: new { controller = "Message", action = "List", page = 1}
+                    template: "{controller=Message}",
+                    defaults: new { action = "Index", page = 1}
                 );
 
                 // Default route
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Message}/{action=List}/{id?}"
+                    template: "{controller=Message}/{action=Index}/{id?}"
                 );
             });
         }

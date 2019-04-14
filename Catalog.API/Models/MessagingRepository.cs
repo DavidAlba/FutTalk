@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Catalog.API.Models
 {
-    public class MessagingRepository : IRepository
+    public class MessagingRepository : IMessageRepository
     {
         protected SqlServerMessagingContext _context = null;
 
@@ -27,12 +27,12 @@ namespace Catalog.API.Models
             return Task<long>.Run(() => _context.Messages.LongCountAsync<Message>());
         }
 
-        public IEnumerable<Message> GetAllMessages(int size, int index)
+        public IEnumerable<Message> GetAllMessages(int size = int.MaxValue, int index = 1)
         {
             return GetAllMessagesAsync(size, index)?.Result;
         }
 
-        public async Task<IEnumerable<Message>> GetAllMessagesAsync(int size, int index)
+        public async Task<IEnumerable<Message>> GetAllMessagesAsync(int size = int.MaxValue, int index = 1)
         {
             if (size < 1) return new List<Message>().AsEnumerable<Message>(); // Empty list
             if (index < 1) return new List<Message>().AsEnumerable<Message>(); // Empty list

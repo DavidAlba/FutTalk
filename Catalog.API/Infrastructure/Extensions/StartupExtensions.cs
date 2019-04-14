@@ -57,17 +57,17 @@ namespace Catalog.API.Infrastructure.Extensions
 
         public static IServiceCollection AddCustomRepository(this IServiceCollection services, IHostingEnvironment environment, ILogger logger)
         {
-            logger.LogInformation($"Registering {nameof(IRepository)} dependency injection ({environment.ApplicationName})...");
+            logger.LogInformation($"Registering {nameof(IMessageRepository)} dependency injection ({environment.ApplicationName})...");
 
             if (environment.IsDevelopment())
             {
                 // Register repository as a Singleton life time 
-                services.AddSingleton<IRepository, MessagingInMemoryRepository>();
+                services.AddSingleton<IMessageRepository, MessagingInMemoryRepository>();
             }
             else
             {
                 // Register repository as a Singleton life time 
-                services.AddSingleton<IRepository, MessagingRepository>();
+                services.AddSingleton<IMessageRepository, MessagingRepository>();
             }
 
             return services;
@@ -115,7 +115,7 @@ namespace Catalog.API.Infrastructure.Extensions
                     {
                         Title = $"{environment.ApplicationName} Web API",
                         Version = "v1",
-                        Description = $"The {environment.ApplicationName} Microservice HTTP API. This is a Data-Driven/CRUD microservice sample",
+                        Description = $"The {environment.ApplicationName} Microservice HTTP API",
                         TermsOfService = "Terms Of Service"
                     });
             });

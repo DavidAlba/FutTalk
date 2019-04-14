@@ -359,8 +359,4 @@
     <None Include="wwwroot\lib\bootstrap\_config.yml" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Infrastructure\ViewComponents\" />
-  </ItemGroup>
-
 </Project>

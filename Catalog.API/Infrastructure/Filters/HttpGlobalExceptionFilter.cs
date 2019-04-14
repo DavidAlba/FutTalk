@@ -26,7 +26,7 @@ namespace Catalog.API.Infrastructure.Filters
                 context.Exception,
                 context.Exception.Message);
 
-            if (context.Exception.GetType() == typeof(FutTalkException))
+            if (context.Exception.GetType() == typeof(MessagesDomainException))
             {
                 var problemDetails = new ValidationProblemDetails()
                 {

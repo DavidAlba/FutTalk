@@ -16,15 +16,21 @@ namespace WebMVC.Infrastructure.Extensions
 {
     public static class StartupExtensions
     {
-        public static IServiceCollection AddCustomHttpClientServices(this IServiceCollection services, IConfiguration configuration, IHostingEnvironment environment, ILogger logger)
+        public static IServiceCollection AddCustomServices(this IServiceCollection services, IConfiguration configuration, IHostingEnvironment environment, ILogger logger)
         {
             logger.LogInformation($"Addign HttpClientServices ({environment.ApplicationName})...");
 
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
             if (environment.IsDevelopment())
-            {                
+            {
+                // FakeCapsuleService uses Sesion
+                services.AddHttpContextAccessor();
+                services.AddMemoryCache();
+                services.AddSession();
+
                 services.AddSingleton<IMessageService, FakeMessageService>();
+                services.AddSingleton<ICapsuleService, FakeCapsuleService>();
+                services.AddSingleton<IDeliveryService, FakeDeliveryService>();
+                services.AddSingleton<IApplicationUserService, FakeApplicationUserService>();
             }
             else
             {
@@ -36,7 +42,7 @@ namespace WebMVC.Infrastructure.Extensions
                 //services.AddHttpClient("extendedhandlerlifetime").SetHandlerLifetime(TimeSpan.FromMinutes(5));
 
                 //add http client services
-                services.AddHttpClient<IMessageService, MessageService>();
+                //services.AddHttpClient<IMessageService, MessageService>();
                 //services.AddHttpClient<IMessageService, MessageService>()
                 //    .AddPolicyHandler(
                 //            HttpPolicyExtensions
@@ -64,8 +70,6 @@ namespace WebMVC.Infrastructure.Extensions
 
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-
-            services.AddSession();
             
             return services;
         }

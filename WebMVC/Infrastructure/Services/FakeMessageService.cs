@@ -25,7 +25,7 @@ namespace WebMVC.Infrastructure.Services
                         Id = i + 1,
                         Name = $"Name {i + 1}",
                         Body = $"Body {i + 1}",
-                        Category = string.Format("Cat{0}", (i % 2 == 0) ? "1" : "2")
+                        Category = string.Format("Message Cat{0}", (i % 2 == 0) ? "1" : "2")
                     };
         }
 
@@ -39,10 +39,12 @@ namespace WebMVC.Infrastructure.Services
             throw new NotImplementedException();
         }
 
-        public PagingInfo<Message> GetAllMessages(string category, int size = 5, int index = 1)
+        public PagingInfo<Message> GetAllPaginatedMessages(string category, int size = int.MaxValue, int index = 1)
         {
-            IEnumerable<Message> messages = null;
-            var longCount = _messages.LongCount();
+            IEnumerable<Message> messages = new List<Message>().AsEnumerable<Message>(); // Empty list
+            var longCount = _messages.AsQueryable<Message>()
+                 .Where(m => category == null || m.Category == category)
+                 .LongCount();
 
             if (longCount > 0L)
                 messages = _messages.AsQueryable<Message>()
@@ -53,13 +55,12 @@ namespace WebMVC.Infrastructure.Services
                    .AsEnumerable<Message>();            
 
             return new PagingInfo<Message> { CurrentPage = index, ItemsPerPage = size, TotalItems = longCount, Items = messages };
-        }
-        
+        }        
 
-        public Task<PagingInfo<Message>> GetAllMessagesAsync(string category, int size = 5, int index = 1)
+        public Task<PagingInfo<Message>> GetAllPaginatedMessagesAsync(string category, int size = int.MaxValue, int index = 1)
         {        
             return Task<IEnumerable<Message>>.Run(() => {
-                return this.GetAllMessages(category, size, index);
+                return this.GetAllPaginatedMessages(category, size, index);
             });
         }
 
@@ -70,7 +71,7 @@ namespace WebMVC.Infrastructure.Services
 
         public Task<Message> GetMessageByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return Task<Message>.Run(() => _messages.AsEnumerable().FirstOrDefault(m => m.Id == id));
         }
 
         public void RemoveMessage(int id)
@@ -102,5 +103,11 @@ namespace WebMVC.Infrastructure.Services
         {
             throw new NotImplementedException();
         }
+
+        public IEnumerable<Message> GetAllMessages() 
+            => GetAllMessagesAsync().Result;
+
+        public Task<IEnumerable<Message>> GetAllMessagesAsync() 
+            => Task<IEnumerable<Message>>.Run(() => GetAllPaginatedMessages(null).Items);
     }
 }

@@ -23,13 +23,13 @@ namespace Catalog.API.UnitTests
         public async void GetAllMessagesThrowsException()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetAllMessagesAsync(It.IsAny<int>(), It.IsAny<int>())).Throws<FutTalkException>();
+            var mock = new Mock<IMessageRepository>();
+            mock.SetupSequence(rep => rep.GetAllMessagesAsync(It.IsAny<int>(), It.IsAny<int>())).Throws<MessagesDomainException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert            
-            Exception ex = await Assert.ThrowsAsync<FutTalkException>(async () => await controller.GetAllMessages());
-            Assert.Equal(expected: typeof(FutTalkException), actual: ex.GetType());
+            Exception ex = await Assert.ThrowsAsync<MessagesDomainException>(async () => await controller.GetAllMessages());
+            Assert.Equal(expected: typeof(MessagesDomainException), actual: ex.GetType());
         }
 
         [Fact]
@@ -37,7 +37,7 @@ namespace Catalog.API.UnitTests
         {
             // Arrange
             IEnumerable<Message> emptyList = new List<Message>().AsEnumerable<Message>();
-            var mock = new Mock<IRepository>();            
+            var mock = new Mock<IMessageRepository>();            
             mock.SetupSequence(rep => rep.GetAllMessagesAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .Returns(Task<IEnumerable<Message>>.Run(() => emptyList));
             MessageController controller = new MessageController(mock.Object);
@@ -54,7 +54,7 @@ namespace Catalog.API.UnitTests
         {
             // Arrange
             int index = 0, size = 3;
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act
@@ -69,7 +69,7 @@ namespace Catalog.API.UnitTests
         public async void GetAllMessagesOk(Message[] messages)
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             mock.SetupSequence(rep => rep.GetAllMessagesAsync(It.IsAny<int>(), It.IsAny<int>()))
                 .Returns(() => Task<IEnumerable<Message>>.Run(() => messages.AsEnumerable<Message>()));
             MessageController controller = new MessageController(mock.Object);
@@ -88,7 +88,7 @@ namespace Catalog.API.UnitTests
         public async void GetSegmentedMessagesOk(Message[] messages)
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             int size = 2, index = 2;
             mock.Setup(rep => rep.GetAllMessagesAsync(size, index))
                 .Returns(() => Task<IEnumerable<Message>>.Run(() =>
@@ -121,7 +121,7 @@ namespace Catalog.API.UnitTests
         public async void GetSegmentedInformation(Message[] messages)
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             int size = 3, index = 2;
             mock.Setup(rep => rep.GetAllMessagesAsync(size, index))
                 .Returns(() => Task<IEnumerable<Message>>.Run(() =>
@@ -153,23 +153,23 @@ namespace Catalog.API.UnitTests
         public async void GetMessageByIdThrowsException()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();
+            var mock = new Mock<IMessageRepository>();
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<MessagesDomainException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = await Assert.ThrowsAsync<FutTalkException>(
+            Exception ex = await Assert.ThrowsAsync<MessagesDomainException>(
                 async () => await controller.GetMessage(int.MaxValue)
             );
         
-            Assert.Equal(expected: typeof(FutTalkException), actual: ex.GetType());
+            Assert.Equal(expected: typeof(MessagesDomainException), actual: ex.GetType());
         }
 
         [Fact]
         public async void GetMessageByIdBadRequest()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act
@@ -180,14 +180,12 @@ namespace Catalog.API.UnitTests
             mock.Verify(rep => rep.GetMessageById(It.IsAny<int>()), Times.Never);
         }
 
-        [Theory]
-        [ClassData(typeof(MessagesTestData))]
-        public async void GetMessageByIdNotFound(Message[] messages)
+        [Fact]
+        public async void GetMessageByIdNotFound()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetAllMessagesAsync(5, 0))
-                .Returns(Task<IEnumerable<Message>>.Run(() => messages.AsEnumerable<Message>()));            
+            var mock = new Mock<IMessageRepository>();
+            mock.Setup(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Returns(Task<Message>.Run(() => { return default(Message); }));            
             MessageController controller = new MessageController(mock.Object);
 
             // Act
@@ -203,7 +201,7 @@ namespace Catalog.API.UnitTests
         {
             // Arrange
             var messageToFind = messages.SingleOrDefault<Message>((m) => m.Id == 2);
-            var mock = new Mock<IRepository>();            
+            var mock = new Mock<IMessageRepository>();            
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
                 .Returns(Task<Message>.Run(() => messageToFind));
             MessageController controller = new MessageController(mock.Object);
@@ -220,15 +218,15 @@ namespace Catalog.API.UnitTests
         public void CreateMessageThrowsException()
         {
             // Arrange
-            var mock = new Mock<IRepository>();            
-            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();
+            var mock = new Mock<IMessageRepository>();            
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<MessagesDomainException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = Assert.ThrowsAsync<FutTalkException>(
+            Exception ex = Assert.ThrowsAsync<MessagesDomainException>(
                 async () => await controller.CreateMessage(new Message() { Id = int.MaxValue })
             )?.Result;
-            Assert.Equal(expected: typeof(FutTalkException), actual: ex.GetType());
+            Assert.Equal(expected: typeof(MessagesDomainException), actual: ex.GetType());
         }
 
         [Fact]
@@ -243,7 +241,7 @@ namespace Catalog.API.UnitTests
                     Body = $"Body {int.MaxValue}"
                 };
 
-            var mock = new Mock<IRepository>();            
+            var mock = new Mock<IMessageRepository>();            
 
             MessageController controller = new MessageController(mock.Object);
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Returns(Task<Message>.Run(() => default(Message)));
@@ -260,7 +258,7 @@ namespace Catalog.API.UnitTests
         public async void CreateMessageBadRequestMessageIdIsLessThanOne()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             MessageController controller = new MessageController(mock.Object);
             Message message = new Message()
             {
@@ -281,7 +279,7 @@ namespace Catalog.API.UnitTests
         public async  void CreateMessageBadRequestMessageIsNull()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             MessageController controller = new MessageController(mock.Object);            
 
             // Act            
@@ -297,7 +295,7 @@ namespace Catalog.API.UnitTests
         public async void CreateMessageBadRequestMessageAlreadyExists(Message[] messages)
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             MessageController controller = new MessageController(mock.Object);
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Returns(Task<Message>.Run(() => messages[0]));           
 
@@ -313,20 +311,20 @@ namespace Catalog.API.UnitTests
         public async void ReplaceMessageThrowsException()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();            
+            var mock = new Mock<IMessageRepository>();
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<MessagesDomainException>();            
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = await Assert.ThrowsAsync<FutTalkException>(async () => await controller.ReplaceMessage(new Message() { Id = int.MaxValue }));
-            Assert.Equal(typeof(FutTalkException), ex.GetType());
+            Exception ex = await Assert.ThrowsAsync<MessagesDomainException>(async () => await controller.ReplaceMessage(new Message() { Id = int.MaxValue }));
+            Assert.Equal(typeof(MessagesDomainException), ex.GetType());
         }
 
         [Fact]
-        public async void ReplaceMessageIdIsLessThanOne()
+        public async void ReplaceMessageIdBadRequestIsLessThanOne()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
@@ -338,10 +336,10 @@ namespace Catalog.API.UnitTests
         }
 
         [Fact]
-        public async void ReplaceMessageIsNull()
+        public async void ReplaceMessageBadRequestIsNull()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act            
@@ -357,7 +355,7 @@ namespace Catalog.API.UnitTests
         {
             // Arrange
             Message messageNotFound = new Message() { Id = Int32.MaxValue, Name = "Not found", Body = "Not found" };
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
                 .Returns(Task<Message>.Run(() => default(Message)));
             MessageController controller = new MessageController(mock.Object);
@@ -375,7 +373,7 @@ namespace Catalog.API.UnitTests
         public async void ReplaceMessageCreated(Message[] messages)
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             Message messageReplaced = messages[0];
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
                 .Returns(
@@ -399,23 +397,23 @@ namespace Catalog.API.UnitTests
         public async void DeleteMessageThrowsException()
         {
             // Arrange
-            var mock = new Mock<IRepository>();            
-            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();
+            var mock = new Mock<IMessageRepository>();            
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<MessagesDomainException>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act & Assert
-            Exception ex = await Assert.ThrowsAsync<FutTalkException>(
+            Exception ex = await Assert.ThrowsAsync<MessagesDomainException>(
                 async () => await controller.DeleteMessage(int.MaxValue)
                 );
                 
-            Assert.Equal(typeof(FutTalkException), ex.GetType());
+            Assert.Equal(typeof(MessagesDomainException), ex.GetType());
         }
 
         [Fact]
         public async void DeleteMessageBadRequest()
         {
             // Arrange
-            var mock = new Mock<IRepository>();            
+            var mock = new Mock<IMessageRepository>();            
             MessageController controller = new MessageController(mock.Object);
 
             // Act
@@ -429,7 +427,7 @@ namespace Catalog.API.UnitTests
         public async void DeleteMessageNotFound()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Returns(Task<Message>.Run(() => default(Message)));
             MessageController controller = new MessageController(mock.Object);
 
@@ -445,7 +443,7 @@ namespace Catalog.API.UnitTests
         public async void DeleteMessageNoContent(Message[] messages)
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             Message messageDeleted = messages[0];
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(messageDeleted.Id)).Returns(Task<Message>.Run(() => messageDeleted));
             MessageController controller = new MessageController(mock.Object);
@@ -462,23 +460,23 @@ namespace Catalog.API.UnitTests
         public async void UpdateMessageThrowsException()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
-            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<FutTalkException>();
+            var mock = new Mock<IMessageRepository>();
+            mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>())).Throws<MessagesDomainException>();
             MessageController controller = new MessageController(mock.Object);
             
             // Act & Assert
-            Exception ex = await Assert.ThrowsAsync<FutTalkException>(
+            Exception ex = await Assert.ThrowsAsync<MessagesDomainException>(
                 async () => { await controller.UpdateMessage(int.MaxValue, new JsonPatchDocument<Message>()); }
             );
 
-            Assert.Equal(typeof(FutTalkException), ex.GetType());
+            Assert.Equal(typeof(MessagesDomainException), ex.GetType());
         }
 
         [Fact]
         public void UpdateMessageBadRequestMessageIsNull()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             MessageController controller = new MessageController(mock.Object);
 
             // Act
@@ -495,7 +493,7 @@ namespace Catalog.API.UnitTests
         public async void UpdateMessageBadRequestMessageIdIsLessThanOne()
         {
             // Arrange
-            var mock = new Mock<IRepository>();            
+            var mock = new Mock<IMessageRepository>();            
             MessageController controller = new MessageController(mock.Object);
 
             // Act
@@ -513,7 +511,7 @@ namespace Catalog.API.UnitTests
         public async void UpdateMessageNotFound()
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
                 .Returns(Task<Message>.Run(() => default(Message)));
             MessageController controller = new MessageController(mock.Object);
@@ -534,7 +532,7 @@ namespace Catalog.API.UnitTests
         public async void UpdateMessageOk(Message[] messages)
         {
             // Arrange
-            var mock = new Mock<IRepository>();
+            var mock = new Mock<IMessageRepository>();
             Message messageToUpdate = messages[0];
             mock.SetupSequence(rep => rep.GetMessageByIdAsync(It.IsAny<int>()))
                 .Returns(Task<Message>.Run(() => messageToUpdate));
