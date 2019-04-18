@@ -1,0 +1,29 @@
+﻿@{
+    ViewBag.Title = "Edit Message";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model Message
+
+<form asp-action="EditMessage" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <div><span asp-validation-for="Name" class="text-danger"></span></div>
+        <input asp-for="Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Body"></label>
+        <div><span asp-validation-for="Body" class="text-danger"></span></div>
+        <textarea asp-for="Body" class="form-control"></textarea>
+    </div>
+    <div class="form-group">
+        <label asp-for="Category"></label>
+        <div><span asp-validation-for="Category" class="text-danger"></span></div>
+        <input asp-for="Category" class="form-control" />
+    </div>   
+    <div class="text-center">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
